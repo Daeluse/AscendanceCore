@@ -1464,13 +1464,21 @@ void AddBattlegroundScripts()
 
 #ifdef SCRIPTS
 /* This is where custom scripts' loading functions should be declared. */
-
+void AddSC_VisualNPC();
+void AddSC_customskills();
+void AddSC_GMIsland_Theminator();
+void AddSC_npc_changer();
+void AddSC_chat();
 #endif
 
 void AddCustomScripts()
 {
 #ifdef SCRIPTS
     /* This is where custom scripts should be added. */
-
+	AddSC_VisualNPC();
+	AddSC_customskills();
+	AddSC_GMIsland_Theminator();
+	AddSC_npc_changer();
+	AddSC_chat();
 #endif
 }

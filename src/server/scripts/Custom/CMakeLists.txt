@@ -13,6 +13,11 @@
 set(scripts_STAT_SRCS
   ${scripts_STAT_SRCS}
 #  ${sources_Custom}
+Custom/chat.cpp
+Custom/changer.cpp
+Custom/visual.cpp
+Custom/GMisland_Theme.cpp
+Custom/skills.cpp
 )
 
 message("  -> Prepared: Custom")

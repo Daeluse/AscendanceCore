@@ -1986,8 +1986,8 @@ void ObjectMgr::LoadGameobjects()
 
     //                                                0                1   2    3           4           5           6
     QueryResult result = WorldDatabase.Query("SELECT gameobject.guid, id, map, position_x, position_y, position_z, orientation, "
-    //   7          8          9          10         11             12            13     14         15         16          17           18        19
-        "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, eventEntry, pool_entry, phaseid, phasegroup "
+    //   7          8          9          10         11             12            13     14         15         16          17           18        19        20
+        "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, eventEntry, pool_entry, phaseid, phasegroup, size "
         "FROM gameobject LEFT OUTER JOIN game_event_gameobject ON gameobject.guid = game_event_gameobject.guid "
         "LEFT OUTER JOIN pool_gameobject ON gameobject.guid = pool_gameobject.guid");
 
@@ -2089,6 +2089,13 @@ void ObjectMgr::LoadGameobjects()
         uint32 PoolId       = fields[17].GetUInt32();
         data.phaseid = fields[18].GetUInt32();
         data.phaseGroup = fields[19].GetUInt32();
+		data.size = fields[20].GetFloat();
+
+		if (data.size > 30.0f || data.size < 0.0f)
+		{
+			TC_LOG_ERROR("sql.sql", "Table `gameobject` has gameobject (GUID %U Entry: %u) with invalid size (%f) value, skip", guid, data.id, data.size);
+			continue;
+		}
 
         if (data.phaseGroup && GetPhasesForGroup(data.phaseGroup).empty())
         {
