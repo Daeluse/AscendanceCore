@@ -2580,11 +2580,15 @@ void ObjectMgr::LoadItemTemplates()
         itemTemplate.Unk430_1 = sparse->Unk430_1;
         itemTemplate.Unk430_2 = sparse->Unk430_2;
         itemTemplate.BuyCount = std::max(sparse->BuyCount, 1u);
-        itemTemplate.BuyPrice = sparse->BuyPrice;
-        itemTemplate.SellPrice = sparse->SellPrice;
+//        itemTemplate.BuyPrice = sparse->BuyPrice;
+// 		  itemTemplate.SellPrice = sparse->SellPrice;
+		itemTemplate.BuyPrice = 0; //Override all item-sparse.db2 Buy Prices
+        itemTemplate.SellPrice = 0;//Override all item-sparse.db2 Sell Prices
         itemTemplate.InventoryType = db2Data->InventoryType;
-        itemTemplate.AllowableClass = sparse->AllowableClass;
-        itemTemplate.AllowableRace = sparse->AllowableRace;
+//      itemTemplate.AllowableClass = sparse->AllowableClass;
+//      itemTemplate.AllowableRace = sparse->AllowableRace;
+		itemTemplate.AllowableClass = -1; //Override all item-sparse.db2 Class Requirements
+		itemTemplate.AllowableRace = -1;  //Override all item-sparse.db2 Race Requirements
         itemTemplate.ItemLevel = sparse->ItemLevel;
         itemTemplate.RequiredLevel = sparse->RequiredLevel;
         itemTemplate.RequiredSkill = sparse->RequiredSkill;
@@ -2627,7 +2631,8 @@ void ObjectMgr::LoadItemTemplates()
         }
 
         itemTemplate.SpellPPMRate = 0.0f;
-        itemTemplate.Bonding = sparse->Bonding;
+//        itemTemplate.Bonding = sparse->Bonding;
+		itemTemplate.Bonding = 0; //Override all item-sparse.db2 Bonding Types
         itemTemplate.Description = sparse->Description->Str[sWorld->GetDefaultDbcLocale()];
         itemTemplate.PageText = sparse->PageText;
         itemTemplate.LanguageID = sparse->LanguageID;
