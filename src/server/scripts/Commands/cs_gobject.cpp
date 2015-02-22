@@ -552,9 +552,9 @@ public:
     }
 
     //set phasemask for selected object
-    static bool HandleGameObjectSetPhaseCommand(ChatHandler* /*handler*/, char const* /*args*/)
+    static bool HandleGameObjectSetPhaseCommand(ChatHandler* handler, char const* args)
     {
-        /*// number or [name] Shift-click form |color|Hgameobject:go_id|h[name]|h|r
+        // number or [name] Shift-click form |color|Hgameobject:go_id|h[name]|h|r
         char* id = handler->extractKeyFromLink((char*)args, "Hgameobject");
         if (!id)
             return false;
@@ -586,7 +586,7 @@ public:
         }
 
         object->SetPhaseMask(phaseMask, true);
-        object->SaveToDB();*/
+        object->SaveToDB();
         return true;
     }
 

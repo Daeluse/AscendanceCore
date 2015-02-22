@@ -249,14 +249,18 @@ public:
         if (!charID)
             return false;
 
-		char* phaseID = strtok((char*)NULL, " ");
-		uint32 phase = 0;
-		if (phaseID)
-			uint32 phase = atoi((char*)phaseID);
-
         uint32 id  = atoi(charID);
         if (!sObjectMgr->GetCreatureTemplate(id))
             return false;
+
+		char* phaseID = strtok((char*)NULL, " ");
+		if (!phaseID)
+			return true;
+
+		uint32 phase = 0;
+		if (phaseID)
+			uint32 phase = atoi(phaseID);
+
 
         Player* chr = handler->GetSession()->GetPlayer();
         float x = chr->GetPositionX();
@@ -301,7 +305,7 @@ public:
 			creature->SetInPhase(phase, true, true);
 			creature->SetDBPhase(phase);
 			creature->SaveToDB();
-
+			return true;
 		}
 		 
         uint32 db_guid = creature->GetDBTableGUIDLow();
