@@ -78,13 +78,8 @@ public:
 		return true;
 	}
 
-	static bool HandlePhaseLeaveCommand(ChatHandler* handler, const char* args)
+	static bool HandlePhaseLeaveCommand(ChatHandler* handler)
 	{
-		if (!*args)
-			return false;
-
-		uint32 phase = (uint32)atoi((char*)args);
-
 		Unit* target = handler->getSelectedUnit();
 		if (!target)
 			target = handler->GetSession()->GetPlayer();
