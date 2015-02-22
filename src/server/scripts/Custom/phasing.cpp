@@ -47,7 +47,7 @@ public:
 		static ChatCommand phaseCmdTable[] =
 		{
 			{ "join", rbac::RBAC_PERM_COMMAND_PHASE_Join, false, &HandlePhaseJoinCommand, "", NULL },
-			{ "join", rbac::RBAC_PERM_COMMAND_PHASE_Leave, false, &HandlePhaseLeaveCommand, "", NULL },
+			{ "leave", rbac::RBAC_PERM_COMMAND_PHASE_Leave, false, &HandlePhaseLeaveCommand, "", NULL },
 			{ NULL, 0, false, NULL, "", NULL }
 		};
 
