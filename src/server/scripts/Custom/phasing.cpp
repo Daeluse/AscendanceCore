@@ -78,7 +78,7 @@ public:
 		return true;
 	}
 
-	static bool HandlePhaseLeaveCommand(ChatHandler* handler)
+	static bool HandlePhaseLeaveCommand(ChatHandler* handler, char const* /*args*/)
 	{
 		Unit* target = handler->getSelectedUnit();
 		if (!target)
