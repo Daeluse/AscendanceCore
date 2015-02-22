@@ -250,8 +250,6 @@ public:
             return false;
 
 		uint32 phase = (uint32) atoi((char*)args);
-		if (!phase)
-			uint32 phase = 0;
 
         uint32 id  = atoi(charID);
         if (!sObjectMgr->GetCreatureTemplate(id))
@@ -301,7 +299,7 @@ public:
 		creature->SetDBPhase(phase);
 
 		creature->SaveToDB();
-
+		 
         uint32 db_guid = creature->GetDBTableGUIDLow();
 
         // To call _LoadGoods(); _LoadQuests(); CreateTrainerSpells()
