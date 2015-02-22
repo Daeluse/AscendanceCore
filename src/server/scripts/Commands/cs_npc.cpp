@@ -250,7 +250,8 @@ public:
             return false;
 
 		uint32 phase = (uint32) atoi((char*)args);
-        uint32 phase = NULL;
+		if (!phase)
+			uint32 phase = NULL;
 
         uint32 id  = atoi(charID);
         if (!sObjectMgr->GetCreatureTemplate(id))
