@@ -55,7 +55,6 @@ public:
 			{ "kick", rbac::RBAC_PERM_COMMAND_PHASE_KICK, false, &HandlePhaseKickCommand, "", NULL },
 			{ "get", rbac::RBAC_PERM_COMMAND_PHASE_GET, false, &HandlePhaseGetCommand, "", NULL },
 			{ "complete", rbac::RBAC_PERM_COMMAND_PHASE_COMPELETE, false, &HandlePhaseCompleteCommand, "", NULL },
-			{ "addmember", rbac::RBAC_PERM_COMMAND_PHASE_ADDMEMBER, false, &HandlePhaseAddMemberCommand, "", NULL },
 			{ "npcadd", rbac::RBAC_PERM_COMMAND_PHASE_ADDNPC, false, &HandlePhaseAddNpcCommand, "", NULL },
 			{ "npcdelete", rbac::RBAC_PERM_COMMAND_PHASE_DELETENPC, false, &HandlePhaseDeleteNpcCommand, "", NULL },
 			{ NULL, 0, false, NULL, "", NULL }
@@ -326,69 +325,6 @@ public:
 		{
 			chat->SendSysMessage("|cffADD8E6Please take your time.");
 		}
-		return true;
-	};
-
-	static bool HandlePhaseAddMemberCommand(ChatHandler * chat, const char * args)
-	{
-		if (!*args)
-			return false;
-
-		uint32 ph = atoi((char*)args);
-		Player * player = chat->GetSession()->GetPlayer();
-		Player * target = chat->getSelectedPlayer();
-
-		if (!target)
-		{
-			chat->SendSysMessage("Shoma Nemitavanid Khodetan Ra Target Konid");
-			chat->SetSentErrorMessage(true);
-			return false;
-		}
-
-		if (target == player)
-			return false;
-
-		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE player_name='%s'", target->GetName());
-		if (isOwnerOfAPhase)
-		{
-			do
-			{
-				Field * fields = isOwnerOfAPhase->Fetch();
-				if (fields[0].GetInt32() == 0)
-				{
-					chat->PSendSysMessage("|cffFF0000 %s does not own a phase; therefore, he/she cannot be added to your phase.|r", target->GetName());
-					return false;
-				}
-			} while (isOwnerOfAPhase->NextRow());
-		}
-		QueryResult isMember = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE player_name='%s' AND phase='%u'", target->GetName(), ph);
-		if (isMember)
-		{
-			do
-			{
-				Field * field = isMember->Fetch();
-				if (field[0].GetInt32() == 1)
-				{
-					chat->PSendSysMessage("|cffFF0000 %s is already a member of your phase!|r", target->GetName());
-					return false;
-				}
-			} while (isMember->NextRow());
-		}
-		QueryResult isOwner = CharacterDatabase.PQuery("SELECT phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
-		if (isOwner)
-		{
-			do
-			{
-				Field * mfield = isOwner->Fetch();
-				if (ph != mfield[0].GetUInt32())
-				{
-					chat->PSendSysMessage("|cffFF0000You cannot add yourself or anyone else to someone elses phase.|r");
-					return false;
-				}
-			} while (isOwner->NextRow());
-		}
-		chat->PSendSysMessage("|cffFFA500You successfully added %s to your phase %u.|r", target->GetName(), ph);
-		CreatePhase(target, true, ph);
 		return true;
 	};
 
