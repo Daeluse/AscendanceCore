@@ -52,7 +52,6 @@ public:
 			{ "godelete", rbac::RBAC_PERM_COMMAND_PHASE_GODELETE, false, &HandlePhaseGoDeleteCommand, "", NULL },
 			{ "help", rbac::RBAC_PERM_COMMAND_PHASE_HELP, false, &HandlePhaseHelpCommand, "", NULL },
 			{ "delete", rbac::RBAC_PERM_COMMAND_PHASE_DELETE, false, &HandlePhaseDeleteCommand, "", NULL },
-			{ "kick", rbac::RBAC_PERM_COMMAND_PHASE_KICK, false, &HandlePhaseKickCommand, "", NULL },
 			{ "get", rbac::RBAC_PERM_COMMAND_PHASE_GET, false, &HandlePhaseGetCommand, "", NULL },
 			{ "complete", rbac::RBAC_PERM_COMMAND_PHASE_COMPELETE, false, &HandlePhaseCompleteCommand, "", NULL },
 			{ "npcadd", rbac::RBAC_PERM_COMMAND_PHASE_ADDNPC, false, &HandlePhaseAddNpcCommand, "", NULL },
@@ -222,48 +221,6 @@ public:
 		CharacterDatabase.PExecute("DELETE FROM phase WHERE (guid='%u')", player->GetGUID());
 		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE (guid='%u')", player->GetGUID());
 		chat->SendSysMessage("|cffFFFF00Your phase has now been deleted.|r");
-		return true;
-	};
-
-	static bool HandlePhaseKickCommand(ChatHandler * chat, const char * args)
-	{
-		if (!*args)
-			return false;
-
-		Player * player = chat->GetSession()->GetPlayer();
-
-		QueryResult phase = CharacterDatabase.PQuery("SELECT phase FROM phase WHERE guid='%u'", player->GetGUID());
-		if (!phase)
-			return false;
-
-		if (phase)
-		{
-			do
-			{
-				Field * fields = phase->Fetch();
-				QueryResult getplayer = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE player_name='%s'", args);
-				if (!getplayer)
-					return false;
-
-				char msg[255];
-
-				Field * mfields = getplayer->Fetch();
-				if (mfields[0].GetInt32() == fields[0].GetInt32())
-				{
-					Player * target = ObjectAccessor::FindPlayerByName(args);
-					target->SetPhaseMask(0, true);
-					snprintf(msg, 255, "|cffFF0000You were kicked from phase %u by %s!|r", fields[0].GetInt32(), player->GetName());
-					player->Whisper(msg, LANG_UNIVERSAL, player);
-					CharacterDatabase.PExecute("UPDATE phases SET get_phase='0' AND get_phase='0' WHERE (guid='%u')", player->GetGUID());
-				}
-				else
-				{
-					snprintf(msg, 255, "|cffFF0000%s is not currently in your phase!|r", args);
-					chat->SendSysMessage(msg);
-					return false;
-				}
-			} while (phase->NextRow());
-		}
 		return true;
 	};
 
