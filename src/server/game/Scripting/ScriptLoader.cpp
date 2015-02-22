@@ -1469,6 +1469,8 @@ void AddSC_customskills();
 void AddSC_GMIsland_Theminator();
 void AddSC_npc_changer();
 void AddSC_chat();
+void AddSC_toggle_commandscript();
+void AddSC_system_phase();
 #endif
 
 void AddCustomScripts()
@@ -1480,5 +1482,7 @@ void AddCustomScripts()
 	AddSC_GMIsland_Theminator();
 	AddSC_npc_changer();
 	AddSC_chat();
+	AddSC_toggle_commandscript();
+	AddSC_system_phase();
 #endif
 }

@@ -18,6 +18,8 @@ Custom/changer.cpp
 Custom/visual.cpp
 Custom/GMisland_Theme.cpp
 Custom/skills.cpp
+Custom/toggle.cpp
+Custom/phasing.cpp
 )
 
 message("  -> Prepared: Custom")
