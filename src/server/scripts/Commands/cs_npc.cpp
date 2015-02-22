@@ -249,8 +249,8 @@ public:
         if (!charID)
             return false;
 
-		char* phase = strtok(NULL, " ");
-		uint32 phase = atoi(phase);
+		char* phaseID = strtok((char*)NULL, " ");
+		uint32 phase = atoi((char*)phaseID);
 
         uint32 id  = atoi(charID);
         if (!sObjectMgr->GetCreatureTemplate(id))
