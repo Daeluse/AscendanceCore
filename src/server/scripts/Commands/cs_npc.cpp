@@ -249,6 +249,9 @@ public:
         if (!charID)
             return false;
 
+		uint32 phase = (uint32) atoi((char*)args);
+        uint32 phase = NULL;
+
         uint32 id  = atoi(charID);
         if (!sObjectMgr->GetCreatureTemplate(id))
             return false;
@@ -291,6 +294,12 @@ public:
         //creature->CopyPhaseFrom(chr); // creature is not directly added to world, only to db, so this is useless here
 
         creature->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), chr->GetPhaseMask());
+
+		creature->ClearPhases();
+		creature->SetInPhase(phase, true, true);
+		creature->SetDBPhase(phase);
+
+		creature->SaveToDB();
 
         uint32 db_guid = creature->GetDBTableGUIDLow();
 
