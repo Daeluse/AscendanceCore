@@ -70,6 +70,7 @@ public:
 		if (!target)
 			target = handler->GetSession()->GetPlayer();
 
+		target->ClearPhases();
 		target->SetInPhase(phase, true, !target->IsInPhase(phase));
 
 		if (target->GetTypeId() == TYPEID_PLAYER)
