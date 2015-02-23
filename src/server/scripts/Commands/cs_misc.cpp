@@ -296,6 +296,12 @@ public:
             return false;
         }
 
+		if (!target->GetCommandStatus(TOGGLE_SUMMON))
+		{
+			handler->PSendSysMessage("%s has summon toggled off. You can't summon him/her.", (targetName).c_str());
+			return true;
+		}
+
         if (target)
         {
             // check online security
@@ -438,6 +444,12 @@ public:
             handler->SetSentErrorMessage(true);
             return false;
         }
+
+		if (!target->GetCommandStatus(TOGGLE_SUMMON))
+		{
+			handler->PSendSysMessage("%s has summon toggled off. You can't summon him/her.", (targetName).c_str());
+			return true;
+		}
 
         if (target)
         {
