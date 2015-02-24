@@ -111,6 +111,7 @@ public:
 				{
 					chat->PSendSysMessage("|cffFF0000You need to create a phase before joining one!|r");
 
+					chat->SetSentErrorMessage(true);
 					return false;
 				}
 			} while (hasPhase->NextRow());
@@ -126,6 +127,7 @@ public:
 				{
 					chat->PSendSysMessage("|cffFF0000The selected phase is not registered!|r");
 
+					chat->SetSentErrorMessage(true);
 					return false;
 				}
 			} while (hasPhase->NextRow());
@@ -166,6 +168,7 @@ public:
 				{
 					chat->PSendSysMessage("|cffFF0000This phase isn't completed yet!|r \n Phase: %u", phase);
 
+					chat->SetSentErrorMessage(true);
 					return false;
 				}
 			} while (isCompleted->NextRow());
@@ -197,14 +200,20 @@ public:
 
 		if (phase == 0){ // Phase 0 is the main phase, ownership is denied.
 			chat->SendSysMessage("|cffFF0000You cannot own a reserved phase!|r");
+
+			chat->SetSentErrorMessage(true);
 			return false;
 		}
 		else if (phase == 1){ // Phase 1 is reserved, ownership is denied.
 			chat->SendSysMessage("|cffFF0000You cannot own a reserved phase!|r");
+
+			chat->SetSentErrorMessage(true);
 			return false;
 		}
 		else if (phase == 2){ // Phase 2 is reserved, ownership is denied.
 			chat->SendSysMessage("|cffFF0000You cannot own a reserved phase!|r");
+
+			chat->SetSentErrorMessage(true);
 			return false;
 		}
 
