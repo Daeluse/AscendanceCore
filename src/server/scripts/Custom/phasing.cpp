@@ -49,6 +49,10 @@ public:
 			{ "delete", rbac::RBAC_PERM_COMMAND_PHASE_Delete, false, &HandlePhaseDeleteCommand, "", NULL },
 			{ "get", rbac::RBAC_PERM_COMMAND_PHASE_Get, false, &HandlePhaseGetCommand, "", NULL },
 			{ "complete", rbac::RBAC_PERM_COMMAND_PHASE_Complete, false, &HandlePhaseCompleteCommand, "", NULL },
+			{ "name", rbac::RBAC_PERM_COMMAND_PHASE_Name, false, &HandlePhaseNameCommand, "", NULL },
+			{ "kick", rbac::RBAC_PERM_COMMAND_PHASE_Kick, false, &HandlePhaseKickCommand, "", NULL },
+			{ "addmember", rbac::RBAC_PERM_COMMAND_PHASE_AddMember, false, &HandlePhaseAddMemberCommand, "", NULL },
+			{ "delmember", rbac::RBAC_PERM_COMMAND_PHASE_DelMember, false, &HandlePhaseDelMemberCommand, "", NULL },
 			{ NULL, 0, false, NULL, "", NULL }
 		};
 
@@ -166,10 +170,26 @@ public:
 				}
 				else // if the phase isn't completed
 				{
-					chat->PSendSysMessage("|cffFF0000This phase isn't completed yet!|r \n Phase: %u", phase);
+					QueryResult isMember = CharacterDatabase.PQuery("SELECT guid,phase FROM phase_members WHERE phase='%u'", phase);
+					Field * members = isMember->Fetch();
+					if (members[0].GetUInt16() == player->GetGUID()) // if the player is a member
+					{
+						player->ClearPhases();
+						player->SetInPhase(phase, true, !player->IsInPhase(phase));
+						player->ToPlayer()->SendUpdatePhasing();
 
-					chat->SetSentErrorMessage(true);
-					return false;
+						CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
+						chat->PSendSysMessage("|cffffffffYou are now entering your own phase %u.|r", phase);
+
+						return true;
+					}
+					else if (!members[0].GetUInt16() == player->GetGUID()) // if the player is not a member
+					{
+						chat->PSendSysMessage("|cffFF0000This phase isn't completed yet!|r \n Phase: %u", phase);
+
+						chat->SetSentErrorMessage(true);
+						return false;
+					}
 				}
 			} while (isCompleted->NextRow());
 		}
@@ -228,6 +248,7 @@ public:
 				if (mfields[0].GetInt32() != 0)
 				{
 					chat->SendSysMessage("|cffFF0000You already have a phase!|r");
+					chat->SetSentErrorMessage(true);
 					return false;
 				}
 				else
@@ -245,6 +266,7 @@ public:
 				if (phase == fields[0].GetInt32())
 				{
 					chat->SendSysMessage("|cffFF0000This phase has already been taken!|r");
+					chat->SetSentErrorMessage(true);
 					return false;
 				}
 				else
@@ -291,6 +313,7 @@ public:
 				if (fields[0].GetInt32() == 0)
 				{
 					chat->SendSysMessage("|cffFF0000Could not get phase or owned phase.|r");
+					chat->SetSentErrorMessage(true);
 					return false;
 				}
 				chat->PSendSysMessage("|cffADD8E6Current Phase: %u \n Owned Phase: %u|r", fields[1].GetUInt32(), fields[2].GetUInt32());
@@ -317,6 +340,7 @@ public:
 				if (fields[0].GetInt32() == 0)
 				{
 					handler->SendSysMessage("|cffFF0000Could not complete phase.|r");
+					handler->SetSentErrorMessage(true);
 					return false;
 				}
 			} while (isOwnerOfAPhase->NextRow());
@@ -330,6 +354,211 @@ public:
 		{
 			handler->SendSysMessage("|cffFFA500Your phase is no longer public!|r");
 			CharacterDatabase.PExecute("UPDATE phase SET has_completed='0' WHERE guid='%u'", player->GetGUID());
+		}
+		return true;
+	};
+
+	static bool HandlePhaseNameCommand(ChatHandler* handler, const char* args)
+	{
+		std::string argstr = (char*)args;
+
+		Player * player = handler->GetSession()->GetPlayer();
+
+		if (!*args)
+			return false;
+
+		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE guid='%u'", player->GetGUID());
+		if (isOwnerOfAPhase)
+		{
+			do
+			{
+				Field * fields = isOwnerOfAPhase->Fetch();
+				if (fields[0].GetInt32() == 0)
+				{
+					handler->SendSysMessage("|cffFF0000Could not name phase.|r");
+
+					handler->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (isOwnerOfAPhase->NextRow());
+		}
+		handler->SendSysMessage("|cffFFA500You have renamed your phase.|r");
+		CharacterDatabase.PExecute("UPDATE phase SET phase_name='%u' WHERE guid='%u'", args, player->GetGUID());
+		return true;
+	};
+
+	static bool HandlePhaseAddMemberCommand(ChatHandler * chat, const char * args)
+	{
+		if (!*args)
+			return false;
+
+		uint32 ph = atoi((char*)args);
+		Player * player = chat->GetSession()->GetPlayer();
+		Player * target = chat->getSelectedPlayer();
+
+		if (!target)
+		{
+			chat->SendSysMessage("You must select a player!");
+			chat->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (target == player)
+			return false;
+
+		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE player_name='%s'", target->GetName());
+		if (isOwnerOfAPhase)
+		{
+			do
+			{
+				Field * fields = isOwnerOfAPhase->Fetch();
+				if (fields[0].GetInt32() == 0)
+				{
+					chat->PSendSysMessage("|cffFF0000 %s does not own a phase; therefore, he/she cannot be added to your phase.|r", target->GetName());
+					chat->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (isOwnerOfAPhase->NextRow());
+		}
+		QueryResult isMember = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE player_name='%s' AND phase='%u'", target->GetName(), ph);
+		if (isMember)
+		{
+			do
+			{
+				Field * field = isMember->Fetch();
+				if (field[0].GetInt32() == 1)
+				{
+					chat->PSendSysMessage("|cffFF0000 %s is already a member of your phase!|r", target->GetName());
+					chat->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (isMember->NextRow());
+		}
+		QueryResult isOwner = CharacterDatabase.PQuery("SELECT phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
+		if (isOwner)
+		{
+			do
+			{
+				Field * mfield = isOwner->Fetch();
+				if (ph != mfield[0].GetUInt32())
+				{
+					chat->PSendSysMessage("|cffFF0000You cannot add yourself or anyone else to someone elses phase.|r");
+					chat->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (isOwner->NextRow());
+		}
+		chat->PSendSysMessage("|cffFFA500You successfully added %s to your phase %u.|r", target->GetName(), ph);
+		CreatePhase(target, true, ph);
+		return true;
+	};
+
+	static bool HandlePhaseDelMemberCommand(ChatHandler * chat, const char * args)
+	{
+		if (!*args)
+			return false;
+
+		uint32 ph = atoi((char*)args);
+		Player * player = chat->GetSession()->GetPlayer();
+		Player * target = chat->getSelectedPlayer();
+
+		if (!target)
+		{
+			chat->SendSysMessage("You must select a player!");
+			chat->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (target == player)
+			return false;
+
+		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE player_name='%s'", target->GetName());
+		if (isOwnerOfAPhase)
+		{
+			do
+			{
+				Field * fields = isOwnerOfAPhase->Fetch();
+				if (fields[0].GetInt32() == 0)
+				{
+					chat->PSendSysMessage("|cffFF0000 %s does not own a phase; therefore, he/she cannot be removed from your phase.|r", target->GetName());
+					chat->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (isOwnerOfAPhase->NextRow());
+		}
+		QueryResult isMember = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE player_name='%s' AND phase='%u'", target->GetName(), ph);
+		if (isMember)
+		{
+			do
+			{
+				Field * field = isMember->Fetch();
+				if (!field[0].GetInt32() == 1)
+				{
+					chat->PSendSysMessage("|cffFF0000 %s is not a member of your phase!|r", target->GetName());
+					chat->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (isMember->NextRow());
+		}
+		QueryResult isOwner = CharacterDatabase.PQuery("SELECT phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
+		if (isOwner)
+		{
+			do
+			{
+				Field * mfield = isOwner->Fetch();
+				if (ph != mfield[0].GetUInt32())
+				{
+					chat->PSendSysMessage("|cffFF0000You cannot remove yourself or anyone else from someone elses phase.|r");
+					chat->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (isOwner->NextRow());
+		}
+		chat->PSendSysMessage("|cffFFA500You successfully removed %s to your phase %u.|r", target->GetName(), ph);
+		CreatePhase(target, false, ph);
+		return true;
+	};
+
+	static bool HandlePhaseKickCommand(ChatHandler * chat, const char * args)
+	{
+		if (!*args)
+			return false;
+
+		Player * player = chat->GetSession()->GetPlayer();
+
+		QueryResult phase = CharacterDatabase.PQuery("SELECT phase FROM phase WHERE guid='%u'", player->GetGUID());
+		if (!phase)
+			return false;
+
+		if (phase)
+		{
+			do
+			{
+				Field * fields = phase->Fetch();
+				QueryResult getplayer = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE player_name='%s'", args);
+				if (!getplayer)
+					return false;
+
+				char msg[255];
+
+				Field * mfields = getplayer->Fetch();
+				if (mfields[0].GetInt32() == fields[0].GetInt32())
+				{
+					Player * target = ObjectAccessor::FindPlayerByName(args);
+					target->ClearPhases();
+					target->ToPlayer()->SendUpdatePhasing();
+					snprintf(msg, 255, "|cffFF0000You were kicked from phase %u by %s!|r", fields[0].GetInt32(), player->GetName());
+					player->Whisper(msg, LANG_UNIVERSAL, target);
+					CharacterDatabase.PExecute("UPDATE phases SET get_phase='0' WHERE (guid='%u')", player->GetGUID());
+				}
+				else
+				{
+					snprintf(msg, 255, "|cffFF0000%s is not currently in your phase!|r", args);
+					chat->SendSysMessage(msg);
+					chat->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (phase->NextRow());
 		}
 		return true;
 	};
