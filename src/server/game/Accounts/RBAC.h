@@ -715,7 +715,6 @@ enum RBACPermissions
 	RBAC_PERM_COMMAND_PHASE_Name							 = 1007,
 	RBAC_PERM_COMMAND_PHASE_Kick							 = 1008,
 	RBAC_PERM_COMMAND_PHASE_AddMember						 = 1009,
-	RBAC_PERM_COMMAND_PHASE_DelMember						 = 1010,
 	RBAC_PERM_MAX
 };
 
