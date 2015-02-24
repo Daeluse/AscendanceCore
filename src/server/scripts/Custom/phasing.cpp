@@ -163,7 +163,7 @@ public:
 					player->ToPlayer()->SendUpdatePhasing();
 
 					CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
-					chat->PSendSysMessage("|cff4169E1You are now entering phase %u (%s).|r", phase, phaseName);
+					chat->PSendSysMessage("|cff4169E1You are now entering phase %u.|r (%s)", phase, phaseName);
 
 					return true;
 				}
@@ -174,7 +174,7 @@ public:
 					player->ToPlayer()->SendUpdatePhasing();
 
 					CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
-					chat->PSendSysMessage("|cffffffffYou are now entering your own phase %u (%s).|r", phase, phaseName);
+					chat->PSendSysMessage("|cffffffffYou are now entering your own phase %u.|r (%s)", phase, phaseName);
 
 					return true;
 				}
@@ -189,7 +189,7 @@ public:
 						player->ToPlayer()->SendUpdatePhasing();
 
 						CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
-						chat->PSendSysMessage("|cffffffffYou are now entering your own phase %u.|r", phase);
+						chat->PSendSysMessage("|cffffffffYou are now entering your own phase %u.|r (%s)", phase, phaseName);
 
 						return true;
 					}
@@ -603,27 +603,15 @@ public:
 						handler->SetSentErrorMessage(true);
 						return false;
 					}
-
-					if (canBuild == val)
-					{
-						if (!target || target->IsPet() || target->IsTotem())
-						{
-							handler->SendSysMessage("You Must Select Creature");
-							handler->SetSentErrorMessage(true);
-							return false;
-						}
-
-						// Delete the creature
-						target->CombatStop();
-						target->DeleteFromDB();
-						target->AddObjectToRemoveList();
-
-						handler->SendSysMessage(LANG_COMMAND_DELCREATMESSAGE);
-
-						return true;
-					}
 				}
 			}
+		}
+
+		if (!target || target->IsPet() || target->IsTotem())
+		{
+			handler->SendSysMessage("You Must Select Creature");
+			handler->SetSentErrorMessage(true);
+			return false;
 		}
 
 		handler->SendSysMessage("Something went wrong...");
