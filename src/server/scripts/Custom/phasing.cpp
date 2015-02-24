@@ -1,6 +1,3 @@
-/*Orginal Code By Nomsoftware
-Updated By Amir_Cinderella <Amir.Cinderella@Gmail.com>
-*/
 #include "ScriptPCH.h"
 #include "Chat.h"
 #include <stdarg.h>
@@ -54,7 +51,6 @@ public:
 		static ChatCommand phasecommandTable[] =
 		{
 			{ "phase", rbac::RBAC_PERM_COMMAND_PHASE, false, NULL, "", phaseCmdTable },
-			{ "anim", SEC_PLAYER, false, &HandleModifyStandStateCommand, "", NULL },
 			{ NULL, 0, false, NULL, "", NULL }
 		};
 		return phasecommandTable;
@@ -90,17 +86,6 @@ public:
 
 		if (target->GetTypeId() == TYPEID_PLAYER)
 			target->ToPlayer()->SendUpdatePhasing();
-
-		return true;
-	}
-
-	static bool HandleModifyStandStateCommand(ChatHandler* handler, const char* args)
-	{
-		if (!*args)
-			return false;
-
-		uint32 anim_id = atoi((char*)args);
-		handler->GetSession()->GetPlayer()->SetUInt32Value(UNIT_NPC_EMOTESTATE, anim_id);
 
 		return true;
 	}

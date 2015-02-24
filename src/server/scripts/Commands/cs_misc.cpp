@@ -296,10 +296,10 @@ public:
             return false;
         }
 
-		if (!target->GetCommandStatus(TOGGLE_SUMMON))
+		if (!target->GetCommandStatus(TOGGLE_APPEAR))
 		{
-			handler->PSendSysMessage("%s has summon toggled off. You can't summon him/her.", (targetName).c_str());
-			return true;
+			handler->PSendSysMessage("%s has appear toggled off. You can't appear to him/her.", (targetName).c_str());
+			return false;
 		}
 
         if (target)
@@ -448,7 +448,7 @@ public:
 		if (!target->GetCommandStatus(TOGGLE_SUMMON))
 		{
 			handler->PSendSysMessage("%s has summon toggled off. You can't summon him/her.", (targetName).c_str());
-			return true;
+			return false;
 		}
 
         if (target)

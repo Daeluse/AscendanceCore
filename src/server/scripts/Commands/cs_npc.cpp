@@ -256,11 +256,7 @@ public:
 		char* phaseID = strtok((char*)NULL, " ");
 		if (!phaseID)
 			return true;
-
-		uint32 phase = 0;
-		if (phaseID)
-			uint32 phase = atoi(phaseID);
-
+		uint32 phase = atoi(phaseID);
 
         Player* chr = handler->GetSession()->GetPlayer();
         float x = chr->GetPositionX();
@@ -300,6 +296,7 @@ public:
         //creature->CopyPhaseFrom(chr); // creature is not directly added to world, only to db, so this is useless here
 
         creature->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), chr->GetPhaseMask());
+
 		if (phase){
 			creature->ClearPhases();
 			creature->SetInPhase(phase, true, true);

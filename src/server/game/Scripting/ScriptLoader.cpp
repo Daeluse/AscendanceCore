@@ -1471,6 +1471,7 @@ void AddSC_npc_changer();
 void AddSC_chat();
 void AddSC_toggle_commandscript();
 void AddSC_system_phase();
+void AddSC_anim();
 #endif
 
 void AddCustomScripts()
@@ -1484,5 +1485,6 @@ void AddCustomScripts()
 	AddSC_chat();
 	AddSC_toggle_commandscript();
 	AddSC_system_phase();
+	AddSC_anim();
 #endif
 }
