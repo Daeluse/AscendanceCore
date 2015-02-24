@@ -402,7 +402,7 @@ public:
 
 		if (!target)
 		{
-			handler->SendSysMessage("You must select a player!");
+			handler->SendSysMessage("You must select a target!");
 			handler->SetSentErrorMessage(true);
 			return false;
 		}
