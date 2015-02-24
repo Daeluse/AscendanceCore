@@ -285,7 +285,7 @@ public:
         Player* target;
         ObjectGuid targetGuid;
         std::string targetName;
-        if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
+		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
             return false;
 
         Player* _player = handler->GetSession()->GetPlayer();
@@ -296,17 +296,18 @@ public:
             return false;
         }
 
-		if (!target->GetCommandStatus(TOGGLE_APPEAR))
-		{
-			handler->PSendSysMessage("%s has appear toggled off. You can't appear to him/her.", (targetName).c_str());
-			return false;
-		}
-
         if (target)
         {
             // check online security
             if (handler->HasLowerSecurity(target, ObjectGuid::Empty))
                 return false;
+
+			// check appear status
+			if (!target->GetCommandStatus(TOGGLE_APPEAR))
+			{
+				handler->PSendSysMessage("%s has appear toggled off. You can't appear to him/her.", (targetName).c_str());
+				return true;
+			}
 
             std::string chrNameLink = handler->playerLink(targetName);
 
@@ -445,18 +446,20 @@ public:
             return false;
         }
 
-		if (!target->GetCommandStatus(TOGGLE_SUMMON))
-		{
-			handler->PSendSysMessage("%s has summon toggled off. You can't summon him/her.", (targetName).c_str());
-			return false;
-		}
-
         if (target)
         {
             std::string nameLink = handler->playerLink(targetName);
             // check online security
             if (handler->HasLowerSecurity(target, ObjectGuid::Empty))
                 return false;
+
+			// check summon toggle
+
+			if (!target->GetCommandStatus(TOGGLE_SUMMON))
+			{
+				handler->PSendSysMessage("%s has summon toggled off. You can't summon him/her.", (targetName).c_str());
+				return true;
+			}
 
             if (target->IsBeingTeleported())
             {
