@@ -140,7 +140,7 @@ public:
 			} while (hasPhase->NextRow());
 		}
 
-		QueryResult isCompleted = CharacterDatabase.PQuery("SELECT has_completed,guid,phase FROM phase WHERE phase='%u'", phase);
+		QueryResult isCompleted = CharacterDatabase.PQuery("SELECT has_completed,guid,phase,phase_name FROM phase WHERE phase='%u'", phase);
 		if (!isCompleted)
 			return false;
 
@@ -149,6 +149,13 @@ public:
 			do
 			{
 				Field * fields = isCompleted->Fetch();
+				const char * phaseName = fields[3].GetCString();
+
+				if (!phaseName) // if the phase is unnamed
+				{
+					phaseName = "Unnamed";
+				}
+
 				if (fields[0].GetUInt16() == 1) // if the phase is completed
 				{
 					player->ClearPhases();
@@ -156,7 +163,7 @@ public:
 					player->ToPlayer()->SendUpdatePhasing();
 
 					CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
-					chat->PSendSysMessage("|cff4169E1You are now entering phase %u.|r", phase);
+					chat->PSendSysMessage("|cff4169E1You are now entering phase %u (%s).|r", phase, phaseName);
 
 					return true;
 				}
@@ -167,7 +174,7 @@ public:
 					player->ToPlayer()->SendUpdatePhasing();
 
 					CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
-					chat->PSendSysMessage("|cffffffffYou are now entering your own phase %u.|r", phase);
+					chat->PSendSysMessage("|cffffffffYou are now entering your own phase %u (%s).|r", phase, phaseName);
 
 					return true;
 				}
@@ -542,14 +549,21 @@ public:
 
 		uint32 phase = atoi(phasing);
 
-		if (!phase)
-		{
-			handler->SendSysMessage("You are not phased!");
-			handler->SetSentErrorMessage(true);
-			return false;
-		}
+		QueryResult res;
+		res = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
 
-		if (phase == 0)
+		Field * fields = res->Fetch();
+		uint32 val = fields[0].GetUInt32();
+		uint32 owned = fields[1].GetUInt32();
+
+		QueryResult result;
+		result = CharacterDatabase.PQuery("SELECT can_build_in_phase FROM phase_members WHERE guid='%u' AND can_build_in_phase='%u' LIMIT 1", player->GetGUID(), val);
+
+
+		Field * fields = result->Fetch();
+		uint32 canBuild = fields[0].GetUInt32();
+
+		if (!phase)
 		{
 			handler->SendSysMessage("You are not phased!");
 			handler->SetSentErrorMessage(true);
@@ -558,8 +572,12 @@ public:
 
 		if (phase)
 		{
-			QueryResult res;
-			res = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
+			if (phase == 0)
+			{
+				handler->SendSysMessage("You are not phased!");
+				handler->SetSentErrorMessage(true);
+				return false;
+			}
 
 			if (!res)
 			{
@@ -570,58 +588,47 @@ public:
 
 			if (res)
 			{
-				do
+				if (!result)
 				{
-					Field * fields = res->Fetch();
-					uint32 val = fields[0].GetUInt32();
-					uint32 owned = fields[1].GetUInt32();
+					handler->PSendSysMessage("You are not permitted to build in any phases, you can only build in %s", canBuild);
+					handler->SetSentErrorMessage(true);
+					return false;
+				}
 
-					if (val != phase)
+				if (result)
+				{
+					if (canBuild != val)
 					{
-						handler->SendSysMessage("You are not in that phase!");
+						handler->SendSysMessage("You are not a member of this phase!");
 						handler->SetSentErrorMessage(true);
 						return false;
 					}
 
-					if (owned != val)
+					if (canBuild == val)
 					{
-						QueryResult result;
-						result = CharacterDatabase.PQuery("SELECT can_build_in_phase FROM phase_members WHERE guid='%u' AND can_build_in_phase='%u' LIMIT 1", player->GetGUID(), val);
-
-						if (result)
+						if (!target || target->IsPet() || target->IsTotem())
 						{
-							do
-							{
-								Field * fields = result->Fetch();
-								if (!fields[0].GetInt32() == val)
-								{
-									handler->SendSysMessage("You must be added to this phase before you can delete a creature.");
-									handler->SetSentErrorMessage(true);
-									return false;
-								}
-							} while (result->NextRow());
+							handler->SendSysMessage("You Must Select Creature");
+							handler->SetSentErrorMessage(true);
+							return false;
 						}
-					}
 
-				} while (res->NextRow());
+						// Delete the creature
+						target->CombatStop();
+						target->DeleteFromDB();
+						target->AddObjectToRemoveList();
+
+						handler->SendSysMessage(LANG_COMMAND_DELCREATMESSAGE);
+
+						return true;
+					}
+				}
 			}
 		}
 
-		if (!target || target->IsPet() || target->IsTotem())
-		{
-			handler->SendSysMessage("You Must Select Creature");
-			handler->SetSentErrorMessage(true);
-			return false;
-		}
-
-		// Delete the creature
-		target->CombatStop();
-		target->DeleteFromDB();
-		target->AddObjectToRemoveList();
-
-		handler->SendSysMessage(LANG_COMMAND_DELCREATMESSAGE);
-
-		return true;
+		handler->SendSysMessage("Something went wrong...");
+		handler->SetSentErrorMessage(true);
+		return false;
 	}
 };
 
