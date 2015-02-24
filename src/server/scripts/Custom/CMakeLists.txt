@@ -21,6 +21,7 @@ Custom/skills.cpp
 Custom/toggle.cpp
 Custom/phasing.cpp
 Custom/anim.cpp
+Custom/refresh.cpp
 )
 
 message("  -> Prepared: Custom")

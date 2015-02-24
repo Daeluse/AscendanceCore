@@ -1472,6 +1472,7 @@ void AddSC_chat();
 void AddSC_toggle_commandscript();
 void AddSC_system_phase();
 void AddSC_anim();
+void AddSC_refresh();
 #endif
 
 void AddCustomScripts()
@@ -1486,5 +1487,6 @@ void AddCustomScripts()
 	AddSC_toggle_commandscript();
 	AddSC_system_phase();
 	AddSC_anim();
+	AddSC_refresh();
 #endif
 }
