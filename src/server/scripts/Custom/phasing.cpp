@@ -301,16 +301,14 @@ public:
 
 	static bool HandlePhaseCompleteCommand(ChatHandler * chat, const char * args)
 	{
-		if (!*args)
-			return false;
+		std::string argstr = (char*)args;
 
 		Player * player = chat->GetSession()->GetPlayer();
-		uint8 yesorno = (uint8)atoi((char*)args);
-		if (!yesorno)
-			return false;
 
-		if (yesorno > 1)
-			return false;
+		QueryResult phaseCompleted = CharacterDatabase.PQuery("SELECT has_completed FROM phase WHERE guid='%u'", player->GetGUID());
+
+		if (!*args)
+			argstr = (phaseCompleted) ? "off" : "on";
 
 		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE guid='%u'", player->GetGUID());
 		if (isOwnerOfAPhase)
@@ -325,15 +323,15 @@ public:
 				}
 			} while (isOwnerOfAPhase->NextRow());
 		}
-		if (yesorno == 1)
+		if (argstr == "on")
 		{
 			chat->SendSysMessage("|cffFFA500You have now completed your phase! It is open for public.|r");
 			CharacterDatabase.PExecute("UPDATE phase SET has_completed='1' WHERE guid='%u'", player->GetGUID());
 		}
-		else if (yesorno == 0)
+		else if (argstr == "off")
 		{
-			chat->SendSysMessage("|cffFFA500You have privatized your phase! It is NOT open for public.|r");
-			CharacterDatabase.PExecute("UPDATE phase SET has_completed='1' WHERE guid='%u'", player->GetGUID());
+			chat->SendSysMessage("|cffFFA500Your phase is no longer public!|r");
+			CharacterDatabase.PExecute("UPDATE phase SET has_completed='0' WHERE guid='%u'", player->GetGUID());
 		}
 		return true;
 	};
