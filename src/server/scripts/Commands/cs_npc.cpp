@@ -267,18 +267,17 @@ public:
 
 		std::stringstream phases;
 
-		uint32 phase;
-
 		for (uint32 phase : chr->GetPhases())
 		{
 			phases << phase << " ";
 		}
 
-		if (!phases.str().empty())
-			uint32 phase = atoi(phases.str().c_str());
-		else
+		const char* phasing = phases.str().c_str();
+
+		uint32 phase = atoi(phasing);
+
+		if (!phase)
 			uint32 phase = 0;
-		return true;
 
         if (Transport* trans = chr->GetTransport())
         {

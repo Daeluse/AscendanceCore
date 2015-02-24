@@ -14,14 +14,10 @@ public:
 
 	ChatCommand * GetCommands() const
 	{
-		static ChatCommand animCmdTable[] =
-		{
-			{ NULL, 0, false, &HandleAnimCommand, "", NULL }
-		};
 
 		static ChatCommand animcommandTable[] =
 		{
-			{ "anim", SEC_PLAYER, false, NULL, "", animCmdTable },
+			{ "anim", SEC_PLAYER, false, &HandleAnimCommand, "", NULL },
 		};
 		return animcommandTable;
 	}
