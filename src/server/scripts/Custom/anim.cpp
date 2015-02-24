@@ -16,17 +16,17 @@ public:
 	{
 		static ChatCommand animCmdTable[] =
 		{
-			{ NULL, 0, false, &HandlePhaseAnimCommand, "", NULL }
+			{ NULL, 0, false, &HandleAnimCommand, "", NULL }
 		};
 
 		static ChatCommand animcommandTable[] =
 		{
 			{ "anim", SEC_PLAYER, false, NULL, "", animCmdTable },
 		};
-		return phasecommandTable;
+		return animcommandTable;
 	}
 
-	static bool HandlePhaseAnimCommand(ChatHandler* handler, const char* args)
+	static bool HandleAnimCommand(ChatHandler* handler, const char* args)
 	{
 		if (!*args)
 			return false;

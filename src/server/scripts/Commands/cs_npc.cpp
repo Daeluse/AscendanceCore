@@ -253,10 +253,10 @@ public:
         if (!sObjectMgr->GetCreatureTemplate(id))
             return false;
 
-		char* phaseID = strtok((char*)NULL, " ");
+		/*char* phaseID = strtok((char*)NULL, " ");
 		if (!phaseID)
 			return true;
-		uint32 phase = atoi(phaseID);
+		uint32 phase = atoi(phaseID);*/
 
         Player* chr = handler->GetSession()->GetPlayer();
         float x = chr->GetPositionX();
@@ -264,6 +264,21 @@ public:
         float z = chr->GetPositionZ();
         float o = chr->GetOrientation();
         Map* map = chr->GetMap();
+
+		std::stringstream phases;
+
+		uint32 phase;
+
+		for (uint32 phase : chr->GetPhases())
+		{
+			phases << phase << " ";
+		}
+
+		if (!phases.str().empty())
+			uint32 phase = atoi(phases.str().c_str());
+		else
+			uint32 phase = 0;
+		return true;
 
         if (Transport* trans = chr->GetTransport())
         {
@@ -297,13 +312,10 @@ public:
 
         creature->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), chr->GetPhaseMask());
 
-		if (phase){
-			creature->ClearPhases();
-			creature->SetInPhase(phase, true, true);
-			creature->SetDBPhase(phase);
-			creature->SaveToDB();
-			return true;
-		}
+		creature->ClearPhases();
+		creature->SetInPhase(phase, true, true);
+		creature->SetDBPhase(phase);
+		creature->SaveToDB();
 		 
         uint32 db_guid = creature->GetDBTableGUIDLow();
 
