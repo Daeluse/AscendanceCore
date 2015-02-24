@@ -305,26 +305,8 @@ public:
 
 		Player * player = handler->GetSession()->GetPlayer();
 
-		QueryResult phaseCompleted = CharacterDatabase.PQuery("SELECT has_completed FROM phase WHERE guid='%u'", player->GetGUID());
-
 		if (!*args)
-		{
-			if (phaseCompleted)
-			{
-				do
-				{
-					Field * completions = phaseCompleted->Fetch();
-					if (completions[0].GetInt32() == 0)
-					{
-						std::string argstr = "on";
-					}
-					if (completions[0].GetInt32() == 1)
-					{
-						std::string argstr = "off";
-					}
-				} while (phaseCompleted->NextRow());
-			}
-		}
+			return false;
 
 		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE guid='%u'", player->GetGUID());
 		if (isOwnerOfAPhase)
