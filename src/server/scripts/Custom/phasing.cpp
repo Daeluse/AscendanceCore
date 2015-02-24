@@ -393,9 +393,9 @@ public:
 
 		Player * player = handler->GetSession()->GetPlayer();
 		Player * target = handler->getSelectedPlayer();
-		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT COUNT(*),get_phase,phase FROM phase WHERE guid='%u'", player->GetGUID());
+		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
 		Field * fields = getPhaseAndOwnedPhase->Fetch();
-		uint32 phase = fields[2].GetUInt32();
+		uint32 phase_owned = fields[1].GetUInt32();
 
 		if (!target)
 		{
@@ -409,6 +409,21 @@ public:
 			handler->SendSysMessage("You cannot add yourself!");
 			handler->SetSentErrorMessage(true);
 			return false;
+		}
+
+		QueryResult ownsPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE player_name='%s'", player->GetName().c_str());
+		if (ownsPhase)
+		{
+			do
+			{
+				Field * fields = ownsPhase->Fetch();
+				if (fields[0].GetInt32() == 0)
+				{
+					handler->PSendSysMessage("|cffFF0000 You do not own a phase; therefore, you cannot add someone to your phase.|r");
+					handler->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (ownsPhase->NextRow());
 		}
 
 		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE player_name='%s'", target->GetName().c_str());
@@ -426,7 +441,7 @@ public:
 			} while (isOwnerOfAPhase->NextRow());
 		}
 
-		QueryResult isMember = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE player_name='%s' AND phase='%u'", target->GetName().c_str(), phase);
+		QueryResult isMember = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE player_name='%s' AND phase='%u'", target->GetName().c_str(), phase_owned);
 		if (isMember)
 		{
 			do
@@ -441,65 +456,69 @@ public:
 			} while (isMember->NextRow());
 		}
 
-		QueryResult isOwner = CharacterDatabase.PQuery("SELECT phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
-		if (isOwner)
-		{
-			do
-			{
-				Field * mfield = isOwner->Fetch();
-				if (phase != mfield[0].GetUInt32())
-				{
-					handler->PSendSysMessage("|cffFF0000You cannot add yourself or anyone else to someone elses phase.|r");
-					handler->SetSentErrorMessage(true);
-					return false;
-				}
-			} while (isOwner->NextRow());
-		}
-		handler->PSendSysMessage("|cffFFA500You successfully added %s to your phase %u.|r", target->GetName().c_str(), phase);
-		CreatePhase(target, true, phase);
+		handler->PSendSysMessage("|cffFFA500You successfully added %s to your phase %u.|r", target->GetName().c_str(), phase_owned);
+		CreatePhase(target, true, phase_owned);
 		return true;
 	};
 
-	static bool HandlePhaseKickCommand(ChatHandler * chat, const char * args)
+	static bool HandlePhaseKickCommand(ChatHandler * handler, const char * /*args*/)
 	{
-		if (!*args)
-			return false;
+		Player * target = handler->getSelectedPlayer();
+		Player * player = handler->GetSession()->GetPlayer();
 
-		Player * player = chat->GetSession()->GetPlayer();
+		std::stringstream phases;
 
-		QueryResult phase = CharacterDatabase.PQuery("SELECT phase FROM phase WHERE guid='%u'", player->GetGUID());
-		if (!phase)
-			return false;
-
-		if (phase)
+		for (uint32 phase : target->GetPhases())
 		{
-			do
+			phases << phase << " ";
+		}
+
+		const char* phasing = phases.str().c_str();
+
+		uint32 phase = atoi(phasing);
+
+		if (!phase)
+		{
+			handler->SendSysMessage("You target is not phased!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (phase == 0)
+		{
+			handler->SendSysMessage("You target is not phased!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (phase > 0)
+		{
+			QueryResult getplayer = CharacterDatabase.PQuery("SELECT phase_owned FROM phase WHERE player_name='%s'", player->GetName().c_str());
+			if (!getplayer)
 			{
-				Field * fields = phase->Fetch();
-				QueryResult getplayer = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE player_name='%s'", args);
-				if (!getplayer)
-					return false;
+				handler->SendSysMessage("Something went wrong. Please ensure that you are the owner of this phase.");
+				handler->SetSentErrorMessage(true);
+				return false;
+			}
 
-				char msg[255];
+			char msg[255];
 
-				Field * mfields = getplayer->Fetch();
-				if (mfields[0].GetInt32() == fields[0].GetInt32())
-				{
-					Player * target = ObjectAccessor::FindPlayerByName(args);
-					target->ClearPhases();
-					target->ToPlayer()->SendUpdatePhasing();
-					snprintf(msg, 255, "|cffFF0000You were kicked from phase %u by %s!|r", fields[0].GetInt32(), player->GetName().c_str());
-					player->Whisper(msg, LANG_UNIVERSAL, target);
-					CharacterDatabase.PExecute("UPDATE phases SET get_phase='0' WHERE (guid='%u')", target->GetGUID());
-				}
-				else
-				{
-					snprintf(msg, 255, "|cffFF0000%s is not currently in your phase!|r", args);
-					chat->SendSysMessage(msg);
-					chat->SetSentErrorMessage(true);
-					return false;
-				}
-			} while (phase->NextRow());
+			Field * mfields = getplayer->Fetch();
+			if (mfields[0].GetInt32() == phase)
+			{
+				target->ClearPhases();
+				target->ToPlayer()->SendUpdatePhasing();
+				snprintf(msg, 255, "|cffFF0000You were kicked from phase %u by %s!|r", phase, player->GetName().c_str());
+				player->Whisper(msg, LANG_UNIVERSAL, target);
+				CharacterDatabase.PExecute("UPDATE phase SET get_phase='0' WHERE (guid='%u')", target->GetGUID());
+			}
+			else
+			{
+				snprintf(msg, 255, "|cffFF0000%s is not currently in your phase!|r", target->GetName().c_str());
+				handler->SendSysMessage(msg);
+				handler->SetSentErrorMessage(true);
+				return false;
+			}
 		}
 		return true;
 	};
@@ -511,7 +530,7 @@ public:
 
 		std::stringstream phases;
 
-		for (uint32 phase : player->GetPhases())
+		for (uint32 phase : target->GetPhases())
 		{
 			phases << phase << " ";
 		}
@@ -521,39 +540,66 @@ public:
 		uint32 phase = atoi(phasing);
 
 		if (!phase)
-			uint32 phase = 0;
+		{
+			handler->SendSysMessage("You are not phased!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (phase == 0)
+		{
+			handler->SendSysMessage("You are not phased!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
 
 		if (phase)
 		{
 			QueryResult res;
-			res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", player->GetGUID());
+			res = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
+
+			if (!res)
+			{
+				handler->SendSysMessage("You do not own a phase!");
+				handler->SetSentErrorMessage(true);
+				return false;
+			}
+
 			if (res)
 			{
 				do
 				{
 					Field * fields = res->Fetch();
 					uint32 val = fields[0].GetUInt32();
+					uint32 owned = fields[1].GetUInt32();
+
 					if (val != phase)
 					{
-						handler->SendSysMessage("You are not in this phase!");
+						handler->SendSysMessage("You are not in that phase!");
+						handler->SetSentErrorMessage(true);
 						return false;
 					}
 
-					QueryResult result;
-					result = CharacterDatabase.PQuery("SELECT can_build_in_phase FROM phase_members WHERE guid='%u' AND can_build_in_phase='%u' LIMIT 1", player->GetGUID(), phase);
-
-					if (result)
+					if (owned != val)
 					{
-						do
+						QueryResult result;
+						result = CharacterDatabase.PQuery("SELECT can_build_in_phase FROM phase_members WHERE guid='%u' AND can_build_in_phase='%u' LIMIT 1", player->GetGUID(), val);
+
+						if (result)
 						{
-							Field * fields = result->Fetch();
-							if (!fields[0].GetInt32() == phase)
+							do
 							{
-								handler->SendSysMessage("You must be added to this phase before you can target a go.");
-								return false;
-							}
-						} while (result->NextRow());
+								Field * fields = result->Fetch();
+								if (!fields[0].GetInt32() == val)
+								{
+									handler->SendSysMessage("You must be added to this phase before you can delete a creature.");
+									handler->SetSentErrorMessage(true);
+									return false;
+								}
+							} while (result->NextRow());
+						}
 					}
+
 				} while (res->NextRow());
 			}
 		}
