@@ -303,7 +303,7 @@ public:
                 return false;
 
 			// check appear status
-			if (!target->GetCommandStatus(TOGGLE_APPEAR))
+			if (!target->GetCommandStatus(TOGGLE_APPEAR) && handler->HasLowerSecurity(target, ObjectGuid::Empty))
 			{
 				handler->PSendSysMessage("%s has appear toggled off. You can't appear to him/her.", (targetName).c_str());
 				return true;
@@ -455,7 +455,7 @@ public:
 
 			// check summon toggle
 
-			if (!target->GetCommandStatus(TOGGLE_SUMMON))
+			if (!target->GetCommandStatus(TOGGLE_SUMMON) && handler->HasLowerSecurity(target, ObjectGuid::Empty))
 			{
 				handler->PSendSysMessage("%s has summon toggled off. You can't summon him/her.", (targetName).c_str());
 				return true;
