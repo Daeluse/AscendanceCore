@@ -217,7 +217,7 @@ public:
             return false;
         }
 
-        object->CopyPhaseFrom(player);
+        /*object->CopyPhaseFrom(player);*/
 
         if (spawntimeSecs)
         {
@@ -227,11 +227,6 @@ public:
 
         // fill the gameobject data and save to the db
         object->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), player->GetPhaseMask());
-
-		object->ClearPhases();
-		object->SetInPhase(phase, true, true);
-		object->SetDBPhase(phase);
-		object->SaveToDB();
 
         // delete the old object and do a clean load from DB with a fresh new GameObject instance.
         // this is required to avoid weird behavior and memory leaks
@@ -249,6 +244,12 @@ public:
         sObjectMgr->AddGameobjectToGrid(guidLow, sObjectMgr->GetGOData(guidLow));
 
         handler->PSendSysMessage(LANG_GAMEOBJECT_ADD, objectId, objectInfo->name.c_str(), guidLow, x, y, z);
+
+		object->ClearPhases();
+		object->SetInPhase(phase, true, true);
+		object->SetDBPhase(phase);
+		object->SaveToDB();
+
         return true;
     }
 

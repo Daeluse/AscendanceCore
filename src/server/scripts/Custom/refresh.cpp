@@ -41,7 +41,9 @@ public:
 			uint32 phase = 0;
 
 		target->SetInPhase(1, true, !target->IsInPhase(phase));
+		sleep(1);
 		target->ClearPhases();
+		sleep(1);
 		target->SetInPhase(phase, true, !target->IsInPhase(phase));
 
 		if (target->GetTypeId() == TYPEID_PLAYER)
