@@ -299,16 +299,32 @@ public:
 		return true;
 	};
 
-	static bool HandlePhaseCompleteCommand(ChatHandler * chat, const char * args)
+	static bool HandlePhaseCompleteCommand(ChatHandler* handler, const char* args)
 	{
 		std::string argstr = (char*)args;
 
-		Player * player = chat->GetSession()->GetPlayer();
+		Player * player = handler->GetSession()->GetPlayer();
 
 		QueryResult phaseCompleted = CharacterDatabase.PQuery("SELECT has_completed FROM phase WHERE guid='%u'", player->GetGUID());
 
 		if (!*args)
-			argstr = (phaseCompleted) ? "off" : "on";
+		{
+			if (phaseCompleted)
+			{
+				do
+				{
+					Field * completions = phaseCompleted->Fetch();
+					if (completions[0].GetInt32() == 0)
+					{
+						std::string argstr = "on";
+					}
+					if (completions[0].GetInt32() == 1)
+					{
+						std::string argstr = "off";
+					}
+				} while (phaseCompleted->NextRow());
+			}
+		}
 
 		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE guid='%u'", player->GetGUID());
 		if (isOwnerOfAPhase)
@@ -318,19 +334,19 @@ public:
 				Field * fields = isOwnerOfAPhase->Fetch();
 				if (fields[0].GetInt32() == 0)
 				{
-					chat->SendSysMessage("|cffFF0000Could not complete phase.|r");
+					handler->SendSysMessage("|cffFF0000Could not complete phase.|r");
 					return false;
 				}
 			} while (isOwnerOfAPhase->NextRow());
 		}
 		if (argstr == "on")
 		{
-			chat->SendSysMessage("|cffFFA500You have now completed your phase! It is open for public.|r");
+			handler->SendSysMessage("|cffFFA500You have now completed your phase! It is open for public.|r");
 			CharacterDatabase.PExecute("UPDATE phase SET has_completed='1' WHERE guid='%u'", player->GetGUID());
 		}
 		else if (argstr == "off")
 		{
-			chat->SendSysMessage("|cffFFA500Your phase is no longer public!|r");
+			handler->SendSysMessage("|cffFFA500Your phase is no longer public!|r");
 			CharacterDatabase.PExecute("UPDATE phase SET has_completed='0' WHERE guid='%u'", player->GetGUID());
 		}
 		return true;
