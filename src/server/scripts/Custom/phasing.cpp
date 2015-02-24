@@ -96,7 +96,7 @@ public:
 			player->ToPlayer()->SendUpdatePhasing();
 
 			CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
-			chat->PSendSysMessage("|cff4169E1You are now entering phase 1.|r (Main Interior Phase)");
+			chat->PSendSysMessage("|cff4169E1You are now entering phase 2.|r (Main Interior Phase)");
 
 			return true;
 		}
@@ -109,7 +109,22 @@ public:
 				Field * fields = hasPhase->Fetch();
 				if (fields[0].GetInt32() == 0)
 				{
-					chat->PSendSysMessage("|cffFF0000You need to create a phase before joining one!|r", phase);
+					chat->PSendSysMessage("|cffFF0000You need to create a phase before joining one!|r");
+
+					return false;
+				}
+			} while (hasPhase->NextRow());
+		}
+
+		QueryResult phaseExist = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE phase_owned='%u'", phase);
+		if (phaseExist)
+		{
+			do
+			{
+				Field * fields = phaseExist->Fetch();
+				if (fields[0].GetInt32() == 0)
+				{
+					chat->PSendSysMessage("|cffFF0000The selected phase is not registered!|r");
 
 					return false;
 				}
@@ -180,12 +195,18 @@ public:
 
 		uint32 phase = atoi((char*)args);
 
-		if (phase == 0) // Phase 0 is the main phase, ownership is denied.
+		if (phase == 0){ // Phase 0 is the main phase, ownership is denied.
+			chat->SendSysMessage("|cffFF0000You cannot own a reserved phase!|r");
 			return false;
-		else if (phase == 1) // Phase 1 is reserved, ownership is denied.
+		}
+		else if (phase == 1){ // Phase 1 is reserved, ownership is denied.
+			chat->SendSysMessage("|cffFF0000You cannot own a reserved phase!|r");
 			return false;
-		else if (phase == 2) // Phase 1 is reserved, ownership is denied.
+		}
+		else if (phase == 2){ // Phase 2 is reserved, ownership is denied.
+			chat->SendSysMessage("|cffFF0000You cannot own a reserved phase!|r");
 			return false;
+		}
 
 		QueryResult get_phase = CharacterDatabase.PQuery("SELECT phase_owned FROM phase WHERE phase='%u'", phase);
 		QueryResult check = CharacterDatabase.PQuery("SELECT phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
