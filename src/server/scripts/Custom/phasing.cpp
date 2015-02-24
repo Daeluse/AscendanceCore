@@ -56,6 +56,7 @@ public:
 			{ "kick", rbac::RBAC_PERM_COMMAND_PHASE_Kick, false, &HandlePhaseKickCommand, "", NULL },
 			{ "addmember", rbac::RBAC_PERM_COMMAND_PHASE_AddMember, false, &HandlePhaseAddMemberCommand, "", NULL },
 			{ "npcdelete", rbac::RBAC_PERM_COMMAND_PHASE_DeleteNPC, false, &HandlePhaseDeleteNpcCommand, "", NULL },
+			{ "npcadd", rbac::RBAC_PERM_COMMAND_PHASE_AddNPC, false, &HandlePhaseAddNpcCommand, "", NULL },
 			{ NULL, 0, false, NULL, "", NULL }
 		};
 
@@ -613,6 +614,7 @@ public:
 					if (val != phase)
 					{
 						handler->SendSysMessage("You are not in this phase!");
+						handler->SetSentErrorMessage(true);
 						return false;
 					}
 
@@ -628,6 +630,7 @@ public:
 							if (fields[0].GetInt32() == 0)
 							{
 								handler->SendSysMessage("You must be added to this phase before you can build.");
+								handler->SetSentErrorMessage(true);
 								return false;
 							}
 						} while (result->NextRow());
@@ -664,56 +667,66 @@ public:
 
 	static bool HandlePhaseDeleteNpcCommand(ChatHandler * handler, const char * args)
 	{
-		Creature* unit = NULL;
+		Creature * unit = handler->getSelectedCreature();
 		Player * pl = handler->GetSession()->GetPlayer();
-		if (*args)
+
+		std::stringstream phases;
+
+		for (uint32 phase : unit->GetPhases())
 		{
-			char * phase = strtok(NULL, " ");
-			if (!phase)
+			phases << phase << " ";
+		}
+
+		const char* phasing = phases.str().c_str();
+
+		uint32 phase = atoi(phasing);
+
+		if (!phase)
+			uint32 phase = 0;
+
+		if (phase)
+		{
+			uint32 value = atoi((char*)phase);
+			if (value == 0)
+				handler->SendSysMessage("That creature is not phased!");
+				handler->SetSentErrorMessage(true);
 				return false;
 
-			if (phase)
+			QueryResult res;
+			res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", pl->GetGUID());
+			if (res)
 			{
-				uint32 value = atoi((char*)phase);
-				if (value == 0)
-					return false;
-
-				QueryResult res;
-				res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", pl->GetGUID());
-				if (res)
+				do
 				{
-					do
+					Field * fields = res->Fetch();
+					uint32 val = fields[0].GetUInt32();
+					if (val != value)
 					{
-						Field * fields = res->Fetch();
-						uint32 val = fields[0].GetUInt32();
-						if (val != value)
-						{
-							handler->SendSysMessage("You are not in this phase!");
-							return false;
-						}
+						handler->SendSysMessage("You are not in this phase!");
+						handler->SetSentErrorMessage(true);
+						return false;
+					}
 
-						QueryResult result;
-						result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='1' LIMIT 1",
-							pl->GetGUID(), (uint32)val);
+					QueryResult result;
+					result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='1' LIMIT 1",
+						pl->GetGUID(), (uint32)val);
 
-						if (result)
+					if (result)
+					{
+						do
 						{
-							do
+							Field * fields = result->Fetch();
+							if (fields[0].GetInt32() == 0)
 							{
-								Field * fields = result->Fetch();
-								if (fields[0].GetInt32() == 0)
-								{
-									handler->SendSysMessage("You must be added to this phase before you can target a go.");
-									return false;
-								}
-							} while (result->NextRow());
-						}
-					} while (res->NextRow());
-				}
+								handler->SendSysMessage("You must be added to this phase before you can target a go.");
+								handler->SetSentErrorMessage(true);
+								return false;
+							}
+						} while (result->NextRow());
+					}
+				} while (res->NextRow());
 			}
 		}
-		else
-			unit = handler->getSelectedCreature();
 
 		if (!unit || unit->IsPet() || unit->IsTotem())
 		{
