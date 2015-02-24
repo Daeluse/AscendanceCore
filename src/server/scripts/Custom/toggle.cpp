@@ -39,23 +39,20 @@ public:
 
 		std::string argstr = (char*)args;
 
+		Player* _player = handler->GetSession()->GetPlayer();
+
 		if (!*args)
-		{
-			if (handler->GetSession()->GetPlayer()->GetCommandStatus(TOGGLE_APPEAR))
-				argstr = "off";
-			else
-				argstr = "on";
-		}
+			argstr = (handler->GetSession()->GetPlayer()->GetCommandStatus(TOGGLE_APPEAR)) ? "off" : "on";
 
 		if (argstr == "on")
 		{
-			handler->GetSession()->GetPlayer()->m_toggleAppear = true;
+			_player->SetCommandStatusOn(TOGGLE_APPEAR);
 			handler->SendSysMessage("Appear is ON. Players can appear to you.");
 			return true;
 		}
 		else if (argstr == "off")
 		{
-			handler->GetSession()->GetPlayer()->m_toggleAppear = false;
+			_player->SetCommandStatusOff(TOGGLE_APPEAR);
 			handler->SendSysMessage("Appear is OFF. Players can't appear to you.");
 			return true;
 		}
@@ -70,23 +67,20 @@ public:
 
 		std::string argstr = (char*)args;
 
+		Player* _player = handler->GetSession()->GetPlayer();
+
 		if (!*args)
-		{
-			if (handler->GetSession()->GetPlayer()->GetCommandStatus(TOGGLE_SUMMON))
-				argstr = "off";
-			else
-				argstr = "on";
-		}
+			argstr = (handler->GetSession()->GetPlayer()->GetCommandStatus(TOGGLE_SUMMON)) ? "off" : "on";
 
 		if (argstr == "on")
 		{
-			handler->GetSession()->GetPlayer()->m_toggleSummon = true;
+			_player->SetCommandStatusOn(TOGGLE_SUMMON);
 			handler->SendSysMessage("Summon is ON. Players can summon you.");
 			return true;
 		}
 		else if (argstr == "off")
 		{
-			handler->GetSession()->GetPlayer()->m_toggleSummon = false;
+			_player->SetCommandStatusOff(TOGGLE_SUMMON);
 			handler->SendSysMessage("Summon is OFF. Players can't summon you.");
 			return true;
 		}

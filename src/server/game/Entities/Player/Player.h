@@ -1339,13 +1339,10 @@ class Player : public Unit, public GridObject<Player>
         void SetCommandStatusOn(uint32 command) { _activeCheats |= command; }
         void SetCommandStatusOff(uint32 command) { _activeCheats &= ~command; }
 
-		/*********************************************************/
-		/***                 Toggle Commands                   ***/
-		/*********************************************************/
+		//Toggle Command Values
 		bool m_toggleAppear;
 		bool m_toggleSummon;
 		bool m_toggleModify;
-		void ToggleCommand(int command);
 
         // Played Time Stuff
         time_t m_logintime;
