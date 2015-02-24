@@ -89,6 +89,17 @@ public:
 
 			return true;
 		}
+		else if (phase == 2)
+		{
+			player->ClearPhases();
+			player->SetInPhase(phase, true, !player->IsInPhase(phase));
+			player->ToPlayer()->SendUpdatePhasing();
+
+			CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
+			chat->PSendSysMessage("|cff4169E1You are now entering phase 1.|r (Main Interior Phase)");
+
+			return true;
+		}
 
 		QueryResult hasPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE guid='%u'", player->GetGUID());
 		if (hasPhase)
@@ -172,6 +183,8 @@ public:
 		if (phase == 0) // Phase 0 is the main phase, ownership is denied.
 			return false;
 		else if (phase == 1) // Phase 1 is reserved, ownership is denied.
+			return false;
+		else if (phase == 2) // Phase 1 is reserved, ownership is denied.
 			return false;
 
 		QueryResult get_phase = CharacterDatabase.PQuery("SELECT phase_owned FROM phase WHERE phase='%u'", phase);
