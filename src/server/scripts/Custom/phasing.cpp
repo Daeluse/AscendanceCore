@@ -405,7 +405,7 @@ public:
 		if (target == player)
 			return false;
 
-		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE player_name='%s'", target->GetName());
+		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE player_name='%s'", target->GetName().c_str());
 		if (isOwnerOfAPhase)
 		{
 			do
@@ -413,14 +413,14 @@ public:
 				Field * fields = isOwnerOfAPhase->Fetch();
 				if (fields[0].GetInt32() == 0)
 				{
-					handler->PSendSysMessage("|cffFF0000 %s does not own a phase; therefore, he/she cannot be added to your phase.|r", target->GetName());
+					handler->PSendSysMessage("|cffFF0000 %s does not own a phase; therefore, he/she cannot be added to your phase.|r", target->GetName().c_str());
 					handler->SetSentErrorMessage(true);
 					return false;
 				}
 			} while (isOwnerOfAPhase->NextRow());
 		}
 
-		QueryResult isMember = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE player_name='%s' AND phase='%u'", target->GetName(), phase);
+		QueryResult isMember = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE player_name='%s' AND phase='%u'", target->GetName().c_str(), phase);
 		if (isMember)
 		{
 			do
@@ -428,7 +428,7 @@ public:
 				Field * field = isMember->Fetch();
 				if (field[0].GetInt32() == 1)
 				{
-					handler->PSendSysMessage("|cffFF0000 %s is already a member of your phase!|r", target->GetName());
+					handler->PSendSysMessage("|cffFF0000 %s is already a member of your phase!|r", target->GetName().c_str());
 					handler->SetSentErrorMessage(true);
 					return false;
 				}
@@ -449,7 +449,7 @@ public:
 				}
 			} while (isOwner->NextRow());
 		}
-		handler->PSendSysMessage("|cffFFA500You successfully added %s to your phase %u.|r", target->GetName(), phase);
+		handler->PSendSysMessage("|cffFFA500You successfully added %s to your phase %u.|r", target->GetName().c_str(), phase);
 		CreatePhase(target, true, phase);
 		return true;
 	};
@@ -482,7 +482,7 @@ public:
 					Player * target = ObjectAccessor::FindPlayerByName(args);
 					target->ClearPhases();
 					target->ToPlayer()->SendUpdatePhasing();
-					snprintf(msg, 255, "|cffFF0000You were kicked from phase %u by %s!|r", fields[0].GetInt32(), player->GetName());
+					snprintf(msg, 255, "|cffFF0000You were kicked from phase %u by %s!|r", fields[0].GetInt32(), player->GetName().c_str());
 					player->Whisper(msg, LANG_UNIVERSAL, target);
 					CharacterDatabase.PExecute("UPDATE phases SET get_phase='0' WHERE (guid='%u')", player->GetGUID());
 				}
