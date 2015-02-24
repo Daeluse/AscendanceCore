@@ -219,11 +219,6 @@ public:
 
         object->CopyPhaseFrom(player);
 
-		object->ClearPhases();
-		object->SetInPhase(phase, true, true);
-		object->SetDBPhase(phase);
-		object->SaveToDB();
-
         if (spawntimeSecs)
         {
             uint32 value = atoi((char*)spawntimeSecs);
@@ -232,6 +227,12 @@ public:
 
         // fill the gameobject data and save to the db
         object->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), player->GetPhaseMask());
+
+		object->ClearPhases();
+		object->SetInPhase(phase, true, true);
+		object->SetDBPhase(phase);
+		object->SaveToDB();
+
         // delete the old object and do a clean load from DB with a fresh new GameObject instance.
         // this is required to avoid weird behavior and memory leaks
         delete object;
