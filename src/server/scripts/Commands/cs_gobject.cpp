@@ -194,6 +194,20 @@ public:
         float o = float(player->GetOrientation());
         Map* map = player->GetMap();
 
+		std::stringstream phases;
+
+		for (uint32 phase : player->GetPhases())
+		{
+			phases << phase << " ";
+		}
+
+		const char* phasing = phases.str().c_str();
+
+		uint32 phase = atoi(phasing);
+
+		if (!phase)
+			uint32 phase = 0;
+
         GameObject* object = new GameObject;
         uint32 guidLow = sObjectMgr->GenerateLowGuid(HIGHGUID_GAMEOBJECT);
 
@@ -204,6 +218,11 @@ public:
         }
 
         object->CopyPhaseFrom(player);
+
+		object->ClearPhases();
+		object->SetInPhase(phase, true, true);
+		object->SetDBPhase(phase);
+		object->SaveToDB();
 
         if (spawntimeSecs)
         {
@@ -585,8 +604,13 @@ public:
             return false;
         }
 
-        object->SetPhaseMask(phaseMask, true);
-        object->SaveToDB();
+		object->ClearPhases();
+		object->SetInPhase(phaseMask, true, true);
+		object->SetDBPhase(phaseMask);
+		object->SaveToDB();
+
+        /*object->SetPhaseMask(phaseMask, true);
+        object->SaveToDB();*/
         return true;
     }
 
