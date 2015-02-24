@@ -533,14 +533,31 @@ public:
 		return true;
 	};
 
-	static bool HandlePhaseDeleteNpcCommand(ChatHandler * handler, const char * /*args*/)
+	static bool HandlePhaseAddNpcCommand(ChatHandler* handler, const char* args)
 	{
-		Creature* target = handler->getSelectedCreature();
-		Player * player = handler->GetSession()->GetPlayer();
+		if (!*args)
+			return false;
+		char* charID = handler->extractKeyFromLink((char*)args, "Hcreature_entry");
+		if (!charID)
+			return false;
+
+		char* team = strtok(NULL, " ");
+		int32 teamval = 0;
+		if (team) { teamval = atoi(team); }
+		if (teamval < 0) { teamval = 0; }
+
+		uint32 id = atoi(charID);
+
+		Player* chr = handler->GetSession()->GetPlayer();
+		float x = chr->GetPositionX();
+		float y = chr->GetPositionY();
+		float z = chr->GetPositionZ();
+		float o = chr->GetOrientation();
+		Map* map = chr->GetMap();
 
 		std::stringstream phases;
 
-		for (uint32 phase : target->GetPhases())
+		for (uint32 phase : chr->GetPhases())
 		{
 			phases << phase << " ";
 		}
@@ -549,75 +566,178 @@ public:
 
 		uint32 phase = atoi(phasing);
 
-		QueryResult res;
-		res = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
-
-		Field * fields = res->Fetch();
-		uint32 val = fields[0].GetUInt32();
-		uint32 owned = fields[1].GetUInt32();
-
-		QueryResult result;
-		result = CharacterDatabase.PQuery("SELECT can_build_in_phase FROM phase_members WHERE guid='%u' AND can_build_in_phase='%u' LIMIT 1", player->GetGUID(), val);
-
-
-		Field * p_fields = result->Fetch();
-		uint32 canBuild = p_fields[0].GetUInt32();
-
 		if (!phase)
+			uint32 phase = 0;
+
+		if (Transport* trans = chr->GetTransport())
 		{
-			handler->SendSysMessage("You are not phased!");
-			handler->SetSentErrorMessage(true);
+			uint32 guid = sObjectMgr->GenerateLowGuid(HIGHGUID_UNIT);
+			CreatureData& data = sObjectMgr->NewOrExistCreatureData(guid);
+			data.id = id;
+			data.phaseMask = chr->GetPhaseMask();
+			data.posX = chr->GetTransOffsetX();
+			data.posY = chr->GetTransOffsetY();
+			data.posZ = chr->GetTransOffsetZ();
+			data.orientation = chr->GetTransOffsetO();
+
+			Creature* creature = trans->CreateNPCPassenger(guid, &data);
+
+			// creature->CopyPhaseFrom(chr); // will not be saved, and probably useless
+
+			creature->SaveToDB(trans->GetGOInfo()->moTransport.mapID, 1 << map->GetSpawnMode(), chr->GetPhaseMask());
+
+			sObjectMgr->AddCreatureToGrid(guid, &data);
+			return true;
+		}
+
+		Creature* creature = new Creature;
+		if (!creature->Create(sObjectMgr->GenerateLowGuid(HIGHGUID_UNIT), map, chr->GetPhaseMask(), id, x, y, z, o))
+		{
+			delete creature;
 			return false;
 		}
 
 		if (phase)
 		{
 			if (phase == 0)
-			{
-				handler->SendSysMessage("You are not phased!");
-				handler->SetSentErrorMessage(true);
 				return false;
-			}
 
-			if (!res)
-			{
-				handler->SendSysMessage("You do not own a phase!");
-				handler->SetSentErrorMessage(true);
-				return false;
-			}
-
+			QueryResult res;
+			res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", chr->GetGUID());
 			if (res)
 			{
-				if (!result)
+				do
 				{
-					handler->PSendSysMessage("You are not permitted to build in any phases, you can only build in %s", canBuild);
-					handler->SetSentErrorMessage(true);
-					return false;
-				}
-
-				if (result)
-				{
-					if (canBuild != val)
+					Field * fields = res->Fetch();
+					uint32 val = fields[0].GetUInt32();
+					if (val != phase)
 					{
-						handler->SendSysMessage("You are not a member of this phase!");
-						handler->SetSentErrorMessage(true);
+						handler->SendSysMessage("You are not in this phase!");
 						return false;
 					}
-				}
+
+					QueryResult result;
+					result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='1' LIMIT 1",
+						chr->GetGUID(), (uint32)val);
+
+					if (result)
+					{
+						do
+						{
+							Field * fields = result->Fetch();
+							if (fields[0].GetInt32() == 0)
+							{
+								handler->SendSysMessage("You must be added to this phase before you can build.");
+								return false;
+							}
+						} while (result->NextRow());
+					}
+				} while (res->NextRow());
 			}
 		}
 
-		if (!target || target->IsPet() || target->IsTotem())
+		Creature* creature = new Creature();
+		if (!creature->Create(sObjectMgr->GenerateLowGuid(HIGHGUID_UNIT), map, chr->GetPhaseMask(), id, x, y, z, o))
 		{
-			handler->SendSysMessage("You Must Select Creature");
+			delete creature;
+			return false;
+		}
+
+		//creature->CopyPhaseFrom(chr); // creature is not directly added to world, only to db, so this is useless here
+
+		creature->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), chr->GetPhaseMask());
+
+		creature->ClearPhases();
+		creature->SetInPhase(phase, true, true);
+		creature->SetDBPhase(phase);
+		creature->SaveToDB();
+
+		uint32 db_guid = creature->GetDBTableGUIDLow();
+
+		// To call _LoadGoods(); _LoadQuests(); CreateTrainerSpells()
+		// current "creature" variable is deleted and created fresh new, otherwise old values might trigger asserts or cause undefined behavior
+		creature->CleanupsBeforeDelete();
+		delete creature;
+		creature = new Creature();
+		if (!creature->LoadCreatureFromDB(db_guid, map))
+		{
+			delete creature;
+			return false;
+		}
+
+		sObjectMgr->AddCreatureToGrid(db_guid, sObjectMgr->GetCreatureData(db_guid));
+		return true;
+	};
+
+	static bool HandlePhaseDeleteNpcCommand(ChatHandler * handler, const char * args)
+	{
+		Creature* unit = NULL;
+		Player * pl = handler->GetSession()->GetPlayer();
+		if (*args)
+		{
+			char * phase = strtok(NULL, " ");
+			if (!phase)
+				return false;
+
+			if (phase)
+			{
+				uint32 value = atoi((char*)phase);
+				if (value == 0)
+					return false;
+
+				QueryResult res;
+				res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", pl->GetGUID());
+				if (res)
+				{
+					do
+					{
+						Field * fields = res->Fetch();
+						uint32 val = fields[0].GetUInt32();
+						if (val != value)
+						{
+							handler->SendSysMessage("You are not in this phase!");
+							return false;
+						}
+
+						QueryResult result;
+						result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='1' LIMIT 1",
+							pl->GetGUID(), (uint32)val);
+
+						if (result)
+						{
+							do
+							{
+								Field * fields = result->Fetch();
+								if (fields[0].GetInt32() == 0)
+								{
+									handler->SendSysMessage("You must be added to this phase before you can target a go.");
+									return false;
+								}
+							} while (result->NextRow());
+						}
+					} while (res->NextRow());
+				}
+			}
+		}
+		else
+			unit = handler->getSelectedCreature();
+
+		if (!unit || unit->IsPet() || unit->IsTotem())
+		{
+			handler->SendSysMessage(LANG_SELECT_CREATURE);
 			handler->SetSentErrorMessage(true);
 			return false;
 		}
 
-		handler->SendSysMessage("Something went wrong...");
-		handler->SetSentErrorMessage(true);
-		return false;
-	}
+		// Delete the creature
+		unit->CombatStop();
+		unit->DeleteFromDB();
+		unit->AddObjectToRemoveList();
+
+		handler->SendSysMessage(LANG_COMMAND_DELCREATMESSAGE);
+
+		return true;
+	};
 };
 
 void AddSC_system_phase()
