@@ -590,7 +590,7 @@ public:
 			return true;
 		}
 
-		Creature* creature = new Creature;
+		Creature* creature = new Creature();
 		if (!creature->Create(sObjectMgr->GenerateLowGuid(HIGHGUID_UNIT), map, chr->GetPhaseMask(), id, x, y, z, o))
 		{
 			delete creature;
@@ -634,13 +634,6 @@ public:
 					}
 				} while (res->NextRow());
 			}
-		}
-
-		Creature* creature = new Creature();
-		if (!creature->Create(sObjectMgr->GenerateLowGuid(HIGHGUID_UNIT), map, chr->GetPhaseMask(), id, x, y, z, o))
-		{
-			delete creature;
-			return false;
 		}
 
 		//creature->CopyPhaseFrom(chr); // creature is not directly added to world, only to db, so this is useless here
