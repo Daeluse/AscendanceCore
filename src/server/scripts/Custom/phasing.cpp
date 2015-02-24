@@ -560,8 +560,8 @@ public:
 		result = CharacterDatabase.PQuery("SELECT can_build_in_phase FROM phase_members WHERE guid='%u' AND can_build_in_phase='%u' LIMIT 1", player->GetGUID(), val);
 
 
-		Field * fields = result->Fetch();
-		uint32 canBuild = fields[0].GetUInt32();
+		Field * p_fields = result->Fetch();
+		uint32 canBuild = p_fields[0].GetUInt32();
 
 		if (!phase)
 		{
