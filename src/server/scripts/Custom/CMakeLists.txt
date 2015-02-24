@@ -20,6 +20,7 @@ Custom/GMisland_Theme.cpp
 Custom/skills.cpp
 Custom/toggle.cpp
 Custom/phasing.cpp
+Custom/anim.cpp
 )
 
 message("  -> Prepared: Custom")
