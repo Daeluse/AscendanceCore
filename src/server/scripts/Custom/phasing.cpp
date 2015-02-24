@@ -55,6 +55,7 @@ public:
 			{ "name", rbac::RBAC_PERM_COMMAND_PHASE_Name, false, &HandlePhaseNameCommand, "", NULL },
 			{ "kick", rbac::RBAC_PERM_COMMAND_PHASE_Kick, false, &HandlePhaseKickCommand, "", NULL },
 			{ "addmember", rbac::RBAC_PERM_COMMAND_PHASE_AddMember, false, &HandlePhaseAddMemberCommand, "", NULL },
+			{ "addmember", rbac::RBAC_PERM_COMMAND_PHASE_DeleteMember, false, &HandlePhaseDeleteMemberCommand, "", NULL },
 			{ "npcdelete", rbac::RBAC_PERM_COMMAND_PHASE_DeleteNPC, false, &HandlePhaseDeleteNpcCommand, "", NULL },
 			{ "npcadd", rbac::RBAC_PERM_COMMAND_PHASE_AddNPC, false, &HandlePhaseAddNpcCommand, "", NULL },
 			{ NULL, 0, false, NULL, "", NULL }
@@ -471,6 +472,80 @@ public:
 		CreatePhase(target, true, phase_owned);
 		return true;
 	};
+
+
+	static bool HandlePhaseDeleteMemberCommand(ChatHandler * handler, const char * /*args*/)
+	{
+
+		Player * player = handler->GetSession()->GetPlayer();
+		Player * target = handler->getSelectedPlayer();
+		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
+		Field * fields = getPhaseAndOwnedPhase->Fetch();
+		uint32 phase_owned = fields[1].GetUInt32();
+
+		if (!target)
+		{
+			handler->SendSysMessage("You must select a target!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (target == player)
+		{
+			handler->SendSysMessage("You cannot remove yourself!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		QueryResult ownsPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE player_name='%s'", player->GetName().c_str());
+		if (ownsPhase)
+		{
+			do
+			{
+				Field * fields = ownsPhase->Fetch();
+				if (fields[0].GetInt32() == 0)
+				{
+					handler->PSendSysMessage("|cffFF0000 You do not own a phase; therefore, you cannot remove someone from your phase.|r");
+					handler->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (ownsPhase->NextRow());
+		}
+
+		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE player_name='%s'", target->GetName().c_str());
+		if (isOwnerOfAPhase)
+		{
+			do
+			{
+				Field * fields = isOwnerOfAPhase->Fetch();
+				if (fields[0].GetInt32() == 0)
+				{
+					handler->PSendSysMessage("|cffFF0000 %s does not own a phase; therefore, he/she cannot be removed from your phase.|r", target->GetName().c_str());
+					handler->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (isOwnerOfAPhase->NextRow());
+		}
+
+		QueryResult isMember = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE player_name='%s' AND phase='%u'", target->GetName().c_str(), phase_owned);
+		if (!isMember)
+		{
+			do
+			{
+				Field * field = isMember->Fetch();
+				if (field[0].GetInt32() == 1)
+				{
+					handler->PSendSysMessage("|cffFF0000 %s is not a member of your phase!|r", target->GetName().c_str());
+					handler->SetSentErrorMessage(true);
+					return false;
+				}
+			} while (isMember->NextRow());
+		}
+
+		handler->PSendSysMessage("|cffFFA500You successfully removed %s from your phase %u.|r", target->GetName().c_str(), phase_owned);
+		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE (guid='%u')", target->GetGUID());
+		return true;
+	}
 
 	static bool HandlePhaseKickCommand(ChatHandler * handler, const char * /*args*/)
 	{
