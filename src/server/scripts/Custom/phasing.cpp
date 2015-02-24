@@ -382,7 +382,7 @@ public:
 			} while (isOwnerOfAPhase->NextRow());
 		}
 		handler->SendSysMessage("|cffFFA500You have renamed your phase.|r");
-		CharacterDatabase.PExecute("UPDATE phase SET phase_name='%u' WHERE guid='%u'", args, player->GetGUID());
+		CharacterDatabase.PExecute("UPDATE phase SET phase_name='%s' WHERE guid='%u'", args, player->GetGUID());
 		return true;
 	};
 
