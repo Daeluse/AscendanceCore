@@ -19,6 +19,7 @@ void CreatePhase(Player * player, bool IsMember, uint32 phase)
 			<< "'" << phase << "',"
 			<< "'" << phase << "',"
 			<< "'" << phase << "',"
+			<< "'" << player->GetName() << "',"
 			<< "'" << "0" << "');";
 	}
 	else
@@ -279,7 +280,8 @@ public:
 
 		CreatePhase(player, false, phase);
 		CreatePhase(player, true, phase);
-		player->SetPhaseMask(phase, true);
+		player->SetInPhase(phase, true, !player->IsInPhase(phase));
+		player->ToPlayer()->SendUpdatePhasing();
 		chat->SendSysMessage("|cff4169E1You have created your phase!|r \n |cffbbbbbb.phase join #|r - |cff00FF00is to join a phase.|r \n |cffbbbbbb.phase complete|r - |cff00FF00completes your phase for the public to join and see.|r");
 		return true;
 	};
