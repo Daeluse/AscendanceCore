@@ -19,8 +19,9 @@ void CreatePhase(Player * player, bool IsMember, uint32 phase)
 			<< "'" << phase << "',"
 			<< "'" << phase << "',"
 			<< "'" << phase << "',"
-			<< "'" << player->GetName() << "',"
-			<< "'" << "0" << "');";
+			<< "'" << "0" << "',"
+			<< "'" << player->GetName() << "');";
+
 	}
 	else
 	{
