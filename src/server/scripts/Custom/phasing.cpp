@@ -5,6 +5,7 @@
 #include "PoolMgr.h"
 #include "ObjectAccessor.h"
 #include "Transport.h"
+#include "Language.h"
 using namespace std;
 
 void CreatePhase(Player * player, bool IsMember, uint32 phase)
@@ -300,7 +301,7 @@ public:
 	static bool HandlePhaseGetCommand(ChatHandler * chat, const char * args)
 	{
 		Player * player = chat->GetSession()->GetPlayer();
-		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT COUNT(*),get_phase,phase FROM phase WHERE guid='%u'", player->GetGUID());
+		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT COUNT(*),get_phase,phase,phase_name FROM phase WHERE guid='%u'", player->GetGUID());
 		if (!getPhaseAndOwnedPhase)
 			return false;
 
@@ -315,7 +316,7 @@ public:
 					chat->SetSentErrorMessage(true);
 					return false;
 				}
-				chat->PSendSysMessage("|cffADD8E6Current Phase: %u \n Owned Phase: %u|r", fields[1].GetUInt32(), fields[2].GetUInt32());
+				chat->PSendSysMessage("|cffADD8E6Current Phase: %u \n Owned Phase: %u (%s)|r", fields[1].GetUInt32(), fields[2].GetUInt32(), fields[3].GetCString());
 			} while (getPhaseAndOwnedPhase->NextRow());
 		}
 		return true;
@@ -403,7 +404,11 @@ public:
 		}
 
 		if (target == player)
+		{
+			handler->SendSysMessage("You cannot add yourself!");
+			handler->SetSentErrorMessage(true);
 			return false;
+		}
 
 		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE player_name='%s'", target->GetName().c_str());
 		if (isOwnerOfAPhase)
@@ -484,7 +489,7 @@ public:
 					target->ToPlayer()->SendUpdatePhasing();
 					snprintf(msg, 255, "|cffFF0000You were kicked from phase %u by %s!|r", fields[0].GetInt32(), player->GetName().c_str());
 					player->Whisper(msg, LANG_UNIVERSAL, target);
-					CharacterDatabase.PExecute("UPDATE phases SET get_phase='0' WHERE (guid='%u')", player->GetGUID());
+					CharacterDatabase.PExecute("UPDATE phases SET get_phase='0' WHERE (guid='%u')", target->GetGUID());
 				}
 				else
 				{
@@ -497,6 +502,77 @@ public:
 		}
 		return true;
 	};
+
+	static bool HandlePhaseDeleteNpcCommand(ChatHandler * handler, const char * /*args*/)
+	{
+		Creature* target = handler->getSelectedCreature();
+		Player * player = handler->GetSession()->GetPlayer();
+
+		std::stringstream phases;
+
+		for (uint32 phase : player->GetPhases())
+		{
+			phases << phase << " ";
+		}
+
+		const char* phasing = phases.str().c_str();
+
+		uint32 phase = atoi(phasing);
+
+		if (!phase)
+			uint32 phase = 0;
+
+		if (phase)
+		{
+			QueryResult res;
+			res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", player->GetGUID());
+			if (res)
+			{
+				do
+				{
+					Field * fields = res->Fetch();
+					uint32 val = fields[0].GetUInt32();
+					if (val != phase)
+					{
+						handler->SendSysMessage("You are not in this phase!");
+						return false;
+					}
+
+					QueryResult result;
+					result = CharacterDatabase.PQuery("SELECT can_build_in_phase FROM phase_members WHERE guid='%u' AND can_build_in_phase='%u' LIMIT 1", player->GetGUID(), phase);
+
+					if (result)
+					{
+						do
+						{
+							Field * fields = result->Fetch();
+							if (!fields[0].GetInt32() == phase)
+							{
+								handler->SendSysMessage("You must be added to this phase before you can target a go.");
+								return false;
+							}
+						} while (result->NextRow());
+					}
+				} while (res->NextRow());
+			}
+		}
+
+		if (!target || target->IsPet() || target->IsTotem())
+		{
+			handler->SendSysMessage("You Must Select Creature");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		// Delete the creature
+		target->CombatStop();
+		target->DeleteFromDB();
+		target->AddObjectToRemoveList();
+
+		handler->SendSysMessage(LANG_COMMAND_DELCREATMESSAGE);
+
+		return true;
+	}
 };
 
 void AddSC_system_phase()
