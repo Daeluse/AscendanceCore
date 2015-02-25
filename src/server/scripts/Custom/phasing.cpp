@@ -1022,6 +1022,9 @@ public:
 		object->ClearPhases();
 		object->SetInPhase(phase, true, true);
 		object->SetDBPhase(phase);
+
+		WorldDatabase.PExecute("INSERT INTO phase SET guid = '%u', id = '%u', phase = '%u', owner_id = '%u' ", objectId, guidLow, phase, player->GetSession()->GetAccountId());
+
 		object->SaveToDB();
 
 		return true;
@@ -1157,6 +1160,8 @@ public:
 		object->SetRespawnTime(0);                                 // not save respawn time
 		object->Delete();
 		object->DeleteFromDB();
+
+		WorldDatabase.PExecute("DELETE FROM phase WHERE phase = '%u' ", phase);
 
 		handler->PSendSysMessage(LANG_COMMAND_DELOBJMESSAGE, object->GetGUIDLow());
 
