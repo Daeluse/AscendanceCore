@@ -58,6 +58,8 @@ public:
 			{ "deletemember", rbac::RBAC_PERM_COMMAND_PHASE_DeleteMember, false, &HandlePhaseDeleteMemberCommand, "", NULL },
 			{ "npcdelete", rbac::RBAC_PERM_COMMAND_PHASE_DeleteNPC, false, &HandlePhaseDeleteNpcCommand, "", NULL },
 			{ "npcadd", rbac::RBAC_PERM_COMMAND_PHASE_AddNPC, false, &HandlePhaseAddNpcCommand, "", NULL },
+			{ "gobjadd", rbac::RBAC_PERM_COMMAND_PHASE_AddNPC, false, &HandlePhaseGoCommand, "", NULL },
+			{ "gobjdelete", rbac::RBAC_PERM_COMMAND_PHASE_AddNPC, false, &HandlePhaseGoDeleteCommand, "", NULL },
 			{ NULL, 0, false, NULL, "", NULL }
 		};
 
