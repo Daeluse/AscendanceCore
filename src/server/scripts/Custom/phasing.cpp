@@ -58,8 +58,8 @@ public:
 			{ "deletemember", rbac::RBAC_PERM_COMMAND_PHASE_DeleteMember, false, &HandlePhaseDeleteMemberCommand, "", NULL },
 			{ "npcdelete", rbac::RBAC_PERM_COMMAND_PHASE_DeleteNPC, false, &HandlePhaseDeleteNpcCommand, "", NULL },
 			{ "npcadd", rbac::RBAC_PERM_COMMAND_PHASE_AddNPC, false, &HandlePhaseAddNpcCommand, "", NULL },
-			{ "gobjadd", rbac::RBAC_PERM_COMMAND_PHASE_AddNPC, false, &HandlePhaseGoCommand, "", NULL },
-			{ "gobjdelete", rbac::RBAC_PERM_COMMAND_PHASE_AddNPC, false, &HandlePhaseGoDeleteCommand, "", NULL },
+			{ "gobjadd", rbac::RBAC_PERM_COMMAND_PHASE_AddObject, false, &HandlePhaseGoCommand, "", NULL },
+			{ "gobjdelete", rbac::RBAC_PERM_COMMAND_PHASE_DeleteObject, false, &HandlePhaseGoDeleteCommand, "", NULL },
 			{ NULL, 0, false, NULL, "", NULL }
 		};
 
@@ -703,6 +703,13 @@ public:
 
 					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", chr->GetGUID(), (uint32)val);
 
+					if (!result)
+					{
+						handler->SendSysMessage("You must be added to this phase before you can add creatures.");
+						handler->SetSentErrorMessage(true);
+						return false;
+					}
+
 					if (result)
 					{
 						do
@@ -803,6 +810,13 @@ public:
 					}
 
 					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", chr->GetGUID(), (uint32)val);
+
+					if (!result)
+					{
+						handler->SendSysMessage("You must be added to this phase before you can add creatures.");
+						handler->SetSentErrorMessage(true);
+						return false;
+					}
 
 					if (result)
 					{
@@ -933,6 +947,13 @@ public:
 					}
 
 					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", player->GetGUID(), (uint32)val);
+
+					if (!result)
+					{
+						handler->SendSysMessage("You must be added to this phase before you can add creatures.");
+						handler->SetSentErrorMessage(true);
+						return false;
+					}
 
 					if (result)
 					{
@@ -1076,6 +1097,13 @@ public:
 					QueryResult objectPhase = WorldDatabase.PQuery("SELECT PhaseId FROM gameobject WHERE guid='%u'", object->GetGUID());
 
 					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", player->GetGUID(), (uint32)val);
+
+					if (!result)
+					{
+						handler->SendSysMessage("You must be added to this phase before you can add creatures.");
+						handler->SetSentErrorMessage(true);
+						return false;
+					}
 
 					if (result)
 					{
