@@ -673,13 +673,6 @@ public:
 
 		if (phase)
 		{
-			if (phase == 0)
-			{
-				handler->SendSysMessage("You cannot build in the main phase!");
-				handler->SetSentErrorMessage(true);
-				return false;
-			}
-
 			QueryResult res;
 			res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", chr->GetGUID());
 			if (res)
@@ -695,6 +688,13 @@ public:
 						return false;
 					}
 
+					if (val == 0)
+					{
+						handler->SendSysMessage("You cannot spawn creatures in the main phase!");
+						handler->SetSentErrorMessage(true);
+						return false;
+					}
+
 					QueryResult result;
 					result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", chr->GetGUID(), (uint32)val);
 
@@ -705,7 +705,7 @@ public:
 							Field * fields = result->Fetch();
 							if (fields[0].GetInt32() == 0)
 							{
-								handler->SendSysMessage("You must be added to this phase before you can build.");
+								handler->SendSysMessage("You must be added to this phase before you can add creatures.");
 								handler->SetSentErrorMessage(true);
 								return false;
 							}
@@ -745,6 +745,8 @@ public:
 	{
 		Creature* unit = NULL;
 
+		Player* chr = handler->GetSession()->GetPlayer();
+
 		if (*args)
 		{
 			// number or [name] Shift-click form |color|Hcreature:creature_guid|h[name]|h|r
@@ -762,8 +764,6 @@ public:
 		else
 			unit = handler->getSelectedCreature();
 
-		Player * pl = handler->GetSession()->GetPlayer();
-
 		std::stringstream phases;
 
 		for (uint32 phase : unit->GetPhases())
@@ -778,43 +778,48 @@ public:
 		if (!phase)
 			uint32 phase = 0;
 
-		if (phase == 0)
-			handler->SendSysMessage("That creature is not phased!");
-			handler->SetSentErrorMessage(true);
-			return false;
-
-		QueryResult res;
-		res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", pl->GetGUID());
-		if (res)
+		if (phase)
 		{
-			do
+			QueryResult res;
+			res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", chr->GetGUID());
+			if (res)
 			{
-				Field * fields = res->Fetch();
-				uint32 val = fields[0].GetUInt32();
-				if (val != phase)
+				do
 				{
-					handler->SendSysMessage("You are not in this phase!");
-					handler->SetSentErrorMessage(true);
-					return false;
-				}
-
-				QueryResult result;
-				result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", pl->GetGUID(), (uint32)val);
-
-				if (result)
-				{
-					do
+					Field * fields = res->Fetch();
+					uint32 val = fields[0].GetUInt32();
+					if (val != phase)
 					{
-						Field * fields = result->Fetch();
-						if (fields[0].GetInt32() == 0)
+						handler->SendSysMessage("You are not in this phase!");
+						handler->SetSentErrorMessage(true);
+						return false;
+					}
+
+					if (val == 0)
+					{
+						handler->SendSysMessage("You cannot delete creatures in the main phase!");
+						handler->SetSentErrorMessage(true);
+						return false;
+					}
+
+					QueryResult result;
+					result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", chr->GetGUID(), (uint32)val);
+
+					if (result)
+					{
+						do
 						{
-							handler->SendSysMessage("You must be added to this phase before you can delete a creature.");
-							handler->SetSentErrorMessage(true);
-							return false;
-						}
-					} while (result->NextRow());
-				}
-			} while (res->NextRow());
+							Field * fields = result->Fetch();
+							if (fields[0].GetInt32() == 0)
+							{
+								handler->SendSysMessage("You must be added to this phase before you can delete creatures.");
+								handler->SetSentErrorMessage(true);
+								return false;
+							}
+						} while (result->NextRow());
+					}
+				} while (res->NextRow());
+			}
 		}
 
 		if (!unit || unit->IsPet() || unit->IsTotem())
