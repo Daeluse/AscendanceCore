@@ -11,12 +11,18 @@ using namespace std;
 void CreatePhase(Player * player, bool IsMember, uint32 phase)
 {
 	ostringstream ss;
+
+	QueryResult accName = LoginDatabase.PQuery("SELECT username FROM account WHERE id='%u'", player->GetSession()->GetAccountId());
+
+	Field * a_fields = accName->Fetch();
+
+	std::string userName = a_fields[0].GetString();
+
 	if (IsMember == false)
 	{
 		ss << "INSERT INTO phase VALUES("
 			<< "'" << player->GetSession()->GetAccountId() << "',"
-			<< "'" << player->GetName() << "',"
-			<< "'" << player->GetSession()->GetAccountId() << "',"
+			<< "'" << userName << "',"
 			<< "'" << phase << "',"
 			<< "'" << phase << "',"
 			<< "'" << phase << "',"
@@ -28,7 +34,7 @@ void CreatePhase(Player * player, bool IsMember, uint32 phase)
 	{
 		ss << "INSERT INTO phase_members VALUES("
 			<< "'" << player->GetSession()->GetAccountId() << "',"
-			<< "'" << player->GetName() << "',"
+			<< "'" << userName << "',"
 			<< "'" << phase << "',"
 			<< "'" << phase << "');";
 	}
@@ -79,6 +85,7 @@ public:
 
 		Player * player = chat->GetSession()->GetPlayer();
 		uint32 phase = (uint32)atoi((char*)args);
+
 		if (phase == 0)
 		{
 			player->ClearPhases();
@@ -155,11 +162,6 @@ public:
 			{
 				Field * fields = isCompleted->Fetch();
 				const char * phaseName = fields[3].GetCString();
-
-				if (!phaseName) // if the phase is unnamed
-				{
-					phaseName = "Unnamed";
-				}
 
 				if (fields[0].GetUInt16() == 1) // if the phase is completed
 				{
