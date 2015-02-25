@@ -16,6 +16,7 @@ void CreatePhase(Player * player, bool IsMember, uint32 phase)
 		ss << "INSERT INTO phase VALUES("
 			<< "'" << player->GetGUID() << "',"
 			<< "'" << player->GetName() << "',"
+			<< "'" << player->GetSession()->GetAccountId() << "',"
 			<< "'" << phase << "',"
 			<< "'" << phase << "',"
 			<< "'" << phase << "',"
