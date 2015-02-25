@@ -322,9 +322,8 @@ public:
 			{
 				Field * o_fields = phaseObjects->Fetch();
 				WorldDatabase.PExecute("DELETE FROM phase WHERE (phase='%u')", o_fields[2].GetInt32());
-				WorldDatabase.PExecute("DELETE FROM gameobject WHERE (guid='%u')", o_fields[0].GetInt32());
 
-				char* id = o_fields[1].GetCString;
+				char* id = o_fields[1].GetString;
 				if (!id)
 					return false;
 
