@@ -55,7 +55,7 @@ public:
 			{ "name", rbac::RBAC_PERM_COMMAND_PHASE_Name, false, &HandlePhaseNameCommand, "", NULL },
 			{ "kick", rbac::RBAC_PERM_COMMAND_PHASE_Kick, false, &HandlePhaseKickCommand, "", NULL },
 			{ "addmember", rbac::RBAC_PERM_COMMAND_PHASE_AddMember, false, &HandlePhaseAddMemberCommand, "", NULL },
-			{ "addmember", rbac::RBAC_PERM_COMMAND_PHASE_DeleteMember, false, &HandlePhaseDeleteMemberCommand, "", NULL },
+			{ "deletemember", rbac::RBAC_PERM_COMMAND_PHASE_DeleteMember, false, &HandlePhaseDeleteMemberCommand, "", NULL },
 			{ "npcdelete", rbac::RBAC_PERM_COMMAND_PHASE_DeleteNPC, false, &HandlePhaseDeleteNpcCommand, "", NULL },
 			{ "npcadd", rbac::RBAC_PERM_COMMAND_PHASE_AddNPC, false, &HandlePhaseAddNpcCommand, "", NULL },
 			{ NULL, 0, false, NULL, "", NULL }
@@ -608,28 +608,26 @@ public:
 		}
 		return true;
 	};
-
+#ifndef _PHASE_NPC_COMMANDS_
 	static bool HandlePhaseAddNpcCommand(ChatHandler* handler, const char* args)
 	{
-		if (!*args)
-			return false;
-		char* charID = handler->extractKeyFromLink((char*)args, "Hcreature_entry");
-		if (!charID)
-			return false;
+        if (!*args)
+            return false;
 
-		char* team = strtok(NULL, " ");
-		int32 teamval = 0;
-		if (team) { teamval = atoi(team); }
-		if (teamval < 0) { teamval = 0; }
+        char* charID = handler->extractKeyFromLink((char*)args, "Hcreature_entry");
+        if (!charID)
+            return false;
 
-		uint32 id = atoi(charID);
+        uint32 id  = atoi(charID);
+        if (!sObjectMgr->GetCreatureTemplate(id))
+            return false;
 
-		Player* chr = handler->GetSession()->GetPlayer();
-		float x = chr->GetPositionX();
-		float y = chr->GetPositionY();
-		float z = chr->GetPositionZ();
-		float o = chr->GetOrientation();
-		Map* map = chr->GetMap();
+        Player* chr = handler->GetSession()->GetPlayer();
+        float x = chr->GetPositionX();
+        float y = chr->GetPositionY();
+        float z = chr->GetPositionZ();
+        float o = chr->GetOrientation();
+        Map* map = chr->GetMap();
 
 		std::stringstream phases;
 
@@ -676,7 +674,11 @@ public:
 		if (phase)
 		{
 			if (phase == 0)
+			{
+				handler->SendSysMessage("You cannot build in the main phase!");
+				handler->SetSentErrorMessage(true);
 				return false;
+			}
 
 			QueryResult res;
 			res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", chr->GetGUID());
@@ -694,8 +696,7 @@ public:
 					}
 
 					QueryResult result;
-					result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='1' LIMIT 1",
-						chr->GetGUID(), (uint32)val);
+					result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", chr->GetGUID(), (uint32)val);
 
 					if (result)
 					{
@@ -738,11 +739,29 @@ public:
 
 		sObjectMgr->AddCreatureToGrid(db_guid, sObjectMgr->GetCreatureData(db_guid));
 		return true;
-	};
+	}
 
 	static bool HandlePhaseDeleteNpcCommand(ChatHandler * handler, const char * args)
 	{
-		Creature * unit = handler->getSelectedCreature();
+		Creature* unit = NULL;
+
+		if (*args)
+		{
+			// number or [name] Shift-click form |color|Hcreature:creature_guid|h[name]|h|r
+			char* cId = handler->extractKeyFromLink((char*)args, "Hcreature");
+			if (!cId)
+				return false;
+
+			uint32 lowguid = atoi(cId);
+			if (!lowguid)
+				return false;
+
+			if (CreatureData const* cr_data = sObjectMgr->GetCreatureData(lowguid))
+				unit = handler->GetSession()->GetPlayer()->GetMap()->GetCreature(ObjectGuid(HIGHGUID_UNIT, cr_data->id, lowguid));
+		}
+		else
+			unit = handler->getSelectedCreature();
+
 		Player * pl = handler->GetSession()->GetPlayer();
 
 		std::stringstream phases;
@@ -759,48 +778,43 @@ public:
 		if (!phase)
 			uint32 phase = 0;
 
-		if (phase)
+		if (phase == 0)
+			handler->SendSysMessage("That creature is not phased!");
+			handler->SetSentErrorMessage(true);
+			return false;
+
+		QueryResult res;
+		res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", pl->GetGUID());
+		if (res)
 		{
-			uint32 value = atoi((char*)phase);
-			if (value == 0)
-				handler->SendSysMessage("That creature is not phased!");
-				handler->SetSentErrorMessage(true);
-				return false;
-
-			QueryResult res;
-			res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", pl->GetGUID());
-			if (res)
+			do
 			{
-				do
+				Field * fields = res->Fetch();
+				uint32 val = fields[0].GetUInt32();
+				if (val != phase)
 				{
-					Field * fields = res->Fetch();
-					uint32 val = fields[0].GetUInt32();
-					if (val != value)
-					{
-						handler->SendSysMessage("You are not in this phase!");
-						handler->SetSentErrorMessage(true);
-						return false;
-					}
+					handler->SendSysMessage("You are not in this phase!");
+					handler->SetSentErrorMessage(true);
+					return false;
+				}
 
-					QueryResult result;
-					result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='1' LIMIT 1",
-						pl->GetGUID(), (uint32)val);
+				QueryResult result;
+				result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", pl->GetGUID(), (uint32)val);
 
-					if (result)
+				if (result)
+				{
+					do
 					{
-						do
+						Field * fields = result->Fetch();
+						if (fields[0].GetInt32() == 0)
 						{
-							Field * fields = result->Fetch();
-							if (fields[0].GetInt32() == 0)
-							{
-								handler->SendSysMessage("You must be added to this phase before you can target a go.");
-								handler->SetSentErrorMessage(true);
-								return false;
-							}
-						} while (result->NextRow());
-					}
-				} while (res->NextRow());
-			}
+							handler->SendSysMessage("You must be added to this phase before you can delete a creature.");
+							handler->SetSentErrorMessage(true);
+							return false;
+						}
+					} while (result->NextRow());
+				}
+			} while (res->NextRow());
 		}
 
 		if (!unit || unit->IsPet() || unit->IsTotem())
@@ -818,7 +832,8 @@ public:
 		handler->SendSysMessage(LANG_COMMAND_DELCREATMESSAGE);
 
 		return true;
-	};
+	}
+#endif
 };
 
 void AddSC_system_phase()
