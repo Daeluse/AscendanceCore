@@ -545,7 +545,7 @@ public:
 		}
 
 		handler->PSendSysMessage("|cffFFA500You successfully removed %s from your phase %u.|r", target->GetName().c_str(), phase_owned);
-		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE (guid='%u')", target->GetGUID());
+		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE guid='%u' AND phase='%u'", target->GetGUID(), phase_owned);
 		return true;
 	}
 
