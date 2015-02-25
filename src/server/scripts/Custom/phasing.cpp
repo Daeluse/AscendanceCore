@@ -1073,6 +1073,8 @@ public:
 						return false;
 					}
 
+					QueryResult objectPhase = WorldDatabase.PQuery("SELECT PhaseId FROM gameobject WHERE guid='%u'", object->GetGUID());
+
 					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", player->GetGUID(), (uint32)val);
 
 					if (result)
@@ -1090,6 +1092,14 @@ public:
 							if (fields[0].GetInt32() == 0)
 							{
 								handler->SendSysMessage("You must be added to this phase before you can delete objects.");
+								handler->SetSentErrorMessage(true);
+								return false;
+							}
+
+							Field * objFields = result->Fetch();
+							if (objFields[0].GetInt32() == (uint32)val)
+							{
+								handler->SendSysMessage("That object is not in your current phase!");
 								handler->SetSentErrorMessage(true);
 								return false;
 							}
