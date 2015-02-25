@@ -307,11 +307,26 @@ public:
 
 		player->SetPhaseMask(0, true);
 		QueryResult res = CharacterDatabase.PQuery("SELECT * FROM phase WHERE guid='%u' LIMIT 1", player->GetSession()->GetAccountId());
+		Field * fields = res->Fetch();
 		if (!res)
 			return false;
 
+		QueryResult phaseObjects = WorldDatabase.PQuery("SELECT * FROM phase WHERE phase='%u'", fields[2].GetInt32());
+
 		CharacterDatabase.PExecute("DELETE FROM phase WHERE (guid='%u')", player->GetSession()->GetAccountId());
 		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE (guid='%u')", player->GetSession()->GetAccountId());
+
+		if (phaseObjects)
+		{
+			do
+			{
+				Field * o_fields = phaseObjects->Fetch();
+				WorldDatabase.PExecute("DELETE FROM phase WHERE (phase='%u')", o_fields[2].GetInt32());
+				WorldDatabase.PExecute("DELETE FROM gameobject WHERE (guid='%u')", o_fields[0].GetInt32());
+				chat->PSendSysMessage("|cffADD8E6Phased Objects Have Been Cleared!|r");
+			} while (phaseObjects->NextRow());
+		}
+
 		chat->SendSysMessage("|cffFFFF00Your phase has now been deleted.|r");
 		return true;
 	};
@@ -1023,7 +1038,7 @@ public:
 		object->SetInPhase(phase, true, true);
 		object->SetDBPhase(phase);
 
-		WorldDatabase.PExecute("INSERT INTO phase SET guid = '%u', id = '%u', phase = '%u', owner_id = '%u' ", objectId, guidLow, phase, player->GetSession()->GetAccountId());
+		WorldDatabase.PExecute("INSERT INTO phase SET guid = '%u', id = '%u', phase = '%u', owner_id = '%u' ", guidLow, objectId, phase, player->GetSession()->GetAccountId());
 
 		object->SaveToDB();
 
@@ -1161,7 +1176,7 @@ public:
 		object->Delete();
 		object->DeleteFromDB();
 
-		WorldDatabase.PExecute("DELETE FROM phase WHERE phase = '%u' ", phase);
+		WorldDatabase.PExecute("DELETE FROM phase WHERE guid = '%u' ", guidLow);
 
 		handler->PSendSysMessage(LANG_COMMAND_DELOBJMESSAGE, object->GetGUIDLow());
 
