@@ -296,6 +296,18 @@ public:
             return false;
         }
 
+		bool isAdmin;
+
+		QueryResult result = LoginDatabase.PQuery("SELECT COUNT(*) FROM account_access WHERE id = '%u' AND gmlevel >= 1", _player->GetGUID());
+		Field * fields = result->Fetch();
+
+		if (fields[0].GetInt32() >= 1)
+		{
+			isAdmin = true;
+		}
+		else
+			isAdmin = false;
+
         if (target)
         {
             // check online security
@@ -303,7 +315,7 @@ public:
                 return false;
 
 			// check appear status
-			if (!target->GetCommandStatus(TOGGLE_APPEAR) && handler->HasLowerSecurity(target, ObjectGuid::Empty))
+			if (!target->GetCommandStatus(TOGGLE_APPEAR) && !isAdmin)
 			{
 				handler->PSendSysMessage("%s has appear toggled off. You can't appear to him/her.", (targetName).c_str());
 				return true;
@@ -446,6 +458,18 @@ public:
             return false;
         }
 
+		bool isAdmin;
+
+		QueryResult result = LoginDatabase.PQuery("SELECT COUNT(*) FROM account_access WHERE id = '%u' AND gmlevel >= 1", _player->GetGUID());
+		Field * fields = result->Fetch();
+
+		if (fields[0].GetInt32() >= 1)
+		{
+			isAdmin = true;
+		}
+		else
+			isAdmin = false;
+
         if (target)
         {
             std::string nameLink = handler->playerLink(targetName);
@@ -455,7 +479,7 @@ public:
 
 			// check summon toggle
 
-			if (!target->GetCommandStatus(TOGGLE_SUMMON) && handler->HasLowerSecurity(target, ObjectGuid::Empty))
+			if (!target->GetCommandStatus(TOGGLE_SUMMON) && !isAdmin)
 			{
 				handler->PSendSysMessage("%s has summon toggled off. You can't summon him/her.", (targetName).c_str());
 				return true;

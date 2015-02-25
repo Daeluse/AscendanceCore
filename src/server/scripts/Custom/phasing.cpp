@@ -673,8 +673,7 @@ public:
 
 		if (phase)
 		{
-			QueryResult res;
-			res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", chr->GetGUID());
+			QueryResult res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", chr->GetGUID());
 			if (res)
 			{
 				do
@@ -688,20 +687,19 @@ public:
 						return false;
 					}
 
-					if (val == 0)
-					{
-						handler->SendSysMessage("You cannot spawn creatures in the main phase!");
-						handler->SetSentErrorMessage(true);
-						return false;
-					}
-
-					QueryResult result;
-					result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", chr->GetGUID(), (uint32)val);
+					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", chr->GetGUID(), (uint32)val);
 
 					if (result)
 					{
 						do
 						{
+							if (val == 0)
+							{
+								handler->SendSysMessage("You cannot spawn creatures in the main phase!");
+								handler->SetSentErrorMessage(true);
+								return false;
+							}
+
 							Field * fields = result->Fetch();
 							if (fields[0].GetInt32() == 0)
 							{
@@ -741,32 +739,17 @@ public:
 		return true;
 	}
 
-	static bool HandlePhaseDeleteNpcCommand(ChatHandler * handler, const char * args)
+	static bool HandlePhaseDeleteNpcCommand(ChatHandler * handler, const char * /*args*/)
 	{
 		Creature* unit = NULL;
 
 		Player* chr = handler->GetSession()->GetPlayer();
 
-		if (*args)
-		{
-			// number or [name] Shift-click form |color|Hcreature:creature_guid|h[name]|h|r
-			char* cId = handler->extractKeyFromLink((char*)args, "Hcreature");
-			if (!cId)
-				return false;
-
-			uint32 lowguid = atoi(cId);
-			if (!lowguid)
-				return false;
-
-			if (CreatureData const* cr_data = sObjectMgr->GetCreatureData(lowguid))
-				unit = handler->GetSession()->GetPlayer()->GetMap()->GetCreature(ObjectGuid(HIGHGUID_UNIT, cr_data->id, lowguid));
-		}
-		else
-			unit = handler->getSelectedCreature();
+		unit = handler->getSelectedCreature();
 
 		std::stringstream phases;
 
-		for (uint32 phase : unit->GetPhases())
+		for (uint32 phase : chr->GetPhases())
 		{
 			phases << phase << " ";
 		}
@@ -780,8 +763,7 @@ public:
 
 		if (phase)
 		{
-			QueryResult res;
-			res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", chr->GetGUID());
+			QueryResult res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", chr->GetGUID());
 			if (res)
 			{
 				do
@@ -795,20 +777,19 @@ public:
 						return false;
 					}
 
-					if (val == 0)
-					{
-						handler->SendSysMessage("You cannot delete creatures in the main phase!");
-						handler->SetSentErrorMessage(true);
-						return false;
-					}
-
-					QueryResult result;
-					result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", chr->GetGUID(), (uint32)val);
+					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", chr->GetGUID(), (uint32)val);
 
 					if (result)
 					{
 						do
 						{
+							if (val == 0)
+							{
+								handler->SendSysMessage("You cannot spawn creatures in the main phase!");
+								handler->SetSentErrorMessage(true);
+								return false;
+							}
+
 							Field * fields = result->Fetch();
 							if (fields[0].GetInt32() == 0)
 							{
