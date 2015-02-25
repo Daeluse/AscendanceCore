@@ -608,6 +608,7 @@ public:
 		}
 		return true;
 	};
+
 #ifndef _PHASE_NPC_COMMANDS_
 	static bool HandlePhaseAddNpcCommand(ChatHandler* handler, const char* args)
 	{
@@ -641,7 +642,18 @@ public:
 		uint32 phase = atoi(phasing);
 
 		if (!phase)
-			uint32 phase = 0;
+		{
+			handler->SendSysMessage("You cannot spawn creatures in the main phase!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (phase == 0)
+		{
+			handler->SendSysMessage("You cannot spawn creatures in the main phase!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
 
 		if (Transport* trans = chr->GetTransport())
 		{
@@ -759,7 +771,18 @@ public:
 		uint32 phase = atoi(phasing);
 
 		if (!phase)
-			uint32 phase = 0;
+		{
+			handler->SendSysMessage("You cannot spawn creatures in the main phase!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (phase == 0)
+		{
+			handler->SendSysMessage("You cannot spawn creatures in the main phase!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
 
 		if (phase)
 		{
@@ -819,6 +842,283 @@ public:
 
 		return true;
 	}
+#endif
+
+#ifndef _PHASE_GO_COMMANDS_
+	static bool HandlePhaseGoCommand(ChatHandler * handler, const char * args)
+	{
+		if (!*args)
+			return false;
+
+		// number or [name] Shift-click form |color|Hgameobject_entry:go_id|h[name]|h|r
+		char* id = handler->extractKeyFromLink((char*)args, "Hgameobject_entry");
+		if (!id)
+			return false;
+
+		uint32 objectId = atol(id);
+		if (!objectId)
+			return false;
+
+		char* spawntimeSecs = strtok(NULL, " ");
+
+		const GameObjectTemplate* objectInfo = sObjectMgr->GetGameObjectTemplate(objectId);
+
+		if (!objectInfo)
+		{
+			handler->PSendSysMessage(LANG_GAMEOBJECT_NOT_EXIST, objectId);
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (objectInfo->displayId && !sGameObjectDisplayInfoStore.LookupEntry(objectInfo->displayId))
+		{
+			// report to DB errors log as in loading case
+			TC_LOG_ERROR("sql.sql", "Gameobject (Entry %u GoType: %u) have invalid displayId (%u), not spawned.", objectId, objectInfo->type, objectInfo->displayId);
+			handler->PSendSysMessage(LANG_GAMEOBJECT_HAVE_INVALID_DATA, objectId);
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		Player* player = handler->GetSession()->GetPlayer();
+		float x = float(player->GetPositionX());
+		float y = float(player->GetPositionY());
+		float z = float(player->GetPositionZ());
+		float o = float(player->GetOrientation());
+		Map* map = player->GetMap();
+
+		std::stringstream phases;
+
+		for (uint32 phase : player->GetPhases())
+		{
+			phases << phase << " ";
+		}
+
+		const char* phasing = phases.str().c_str();
+
+		uint32 phase = atoi(phasing);
+
+		if (!phase)
+			uint32 phase = 0;
+
+		if (!phase)
+		{
+			handler->SendSysMessage("You cannot spawn objects in the main phase!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (phase == 0)
+		{
+			handler->SendSysMessage("You cannot spawn objects in the main phase!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (phase)
+		{
+			QueryResult res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", player->GetGUID());
+			if (res)
+			{
+				do
+				{
+					Field * fields = res->Fetch();
+					uint32 val = fields[0].GetUInt32();
+					if (val != phase)
+					{
+						handler->SendSysMessage("You are not in this phase!");
+						handler->SetSentErrorMessage(true);
+						return false;
+					}
+
+					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", player->GetGUID(), (uint32)val);
+
+					if (result)
+					{
+						do
+						{
+							if (val == 0)
+							{
+								handler->SendSysMessage("You cannot spawn objects in the main phase!");
+								handler->SetSentErrorMessage(true);
+								return false;
+							}
+
+							Field * fields = result->Fetch();
+							if (fields[0].GetInt32() == 0)
+							{
+								handler->SendSysMessage("You must be added to this phase before you can spawn objects.");
+								handler->SetSentErrorMessage(true);
+								return false;
+							}
+						} while (result->NextRow());
+					}
+				} while (res->NextRow());
+			}
+		}
+
+		GameObject* object = new GameObject;
+		uint32 guidLow = sObjectMgr->GenerateLowGuid(HIGHGUID_GAMEOBJECT);
+
+		if (!object->Create(guidLow, objectInfo->entry, map, 0, x, y, z, o, 0.0f, 0.0f, 0.0f, 0.0f, 0, GO_STATE_READY))
+		{
+			delete object;
+			return false;
+		}
+
+		/*object->CopyPhaseFrom(player);*/
+
+		if (spawntimeSecs)
+		{
+			uint32 value = atoi((char*)spawntimeSecs);
+			object->SetRespawnTime(value);
+		}
+
+		// fill the gameobject data and save to the db
+		object->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), player->GetPhaseMask());
+
+		// delete the old object and do a clean load from DB with a fresh new GameObject instance.
+		// this is required to avoid weird behavior and memory leaks
+		delete object;
+
+		object = new GameObject();
+		// this will generate a new guid if the object is in an instance
+		if (!object->LoadGameObjectFromDB(guidLow, map))
+		{
+			delete object;
+			return false;
+		}
+
+		/// @todo is it really necessary to add both the real and DB table guid here ?
+		sObjectMgr->AddGameobjectToGrid(guidLow, sObjectMgr->GetGOData(guidLow));
+
+		handler->PSendSysMessage(LANG_GAMEOBJECT_ADD, objectId, objectInfo->name.c_str(), guidLow, x, y, z);
+
+		object->ClearPhases();
+		object->SetInPhase(phase, true, true);
+		object->SetDBPhase(phase);
+		object->SaveToDB();
+
+		return true;
+	}
+
+	static bool HandlePhaseGoDeleteCommand(ChatHandler * handler, const char * args)
+	{
+		// number or [name] Shift-click form |color|Hgameobject:go_guid|h[name]|h|r
+		char* id = handler->extractKeyFromLink((char*)args, "Hgameobject");
+		if (!id)
+			return false;
+
+		uint32 guidLow = atoi(id);
+		if (!guidLow)
+			return false;
+
+		GameObject* object = NULL;
+
+		// by DB guid
+		if (GameObjectData const* gameObjectData = sObjectMgr->GetGOData(guidLow))
+			object = handler->GetObjectGlobalyWithGuidOrNearWithDbGuid(guidLow, gameObjectData->id);
+
+		if (!object)
+		{
+			handler->PSendSysMessage(LANG_COMMAND_OBJNOTFOUND, guidLow);
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		Player* player = handler->GetSession()->GetPlayer();
+
+		std::stringstream phases;
+
+		for (uint32 phase : player->GetPhases())
+		{
+			phases << phase << " ";
+		}
+
+		const char* phasing = phases.str().c_str();
+
+		uint32 phase = atoi(phasing);
+
+		if (!phase)
+			uint32 phase = 0;
+
+		if (!phase)
+		{
+			handler->SendSysMessage("You cannot delete objects in the main phase!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (phase == 0)
+		{
+			handler->SendSysMessage("You cannot delete objects in the main phase!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (phase)
+		{
+			QueryResult res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", player->GetGUID());
+			if (res)
+			{
+				do
+				{
+					Field * fields = res->Fetch();
+					uint32 val = fields[0].GetUInt32();
+					if (val != phase)
+					{
+						handler->SendSysMessage("You are not in this phase!");
+						handler->SetSentErrorMessage(true);
+						return false;
+					}
+
+					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", player->GetGUID(), (uint32)val);
+
+					if (result)
+					{
+						do
+						{
+							if (val == 0)
+							{
+								handler->SendSysMessage("You cannot delete objects in the main phase!");
+								handler->SetSentErrorMessage(true);
+								return false;
+							}
+
+							Field * fields = result->Fetch();
+							if (fields[0].GetInt32() == 0)
+							{
+								handler->SendSysMessage("You must be added to this phase before you can delete objects.");
+								handler->SetSentErrorMessage(true);
+								return false;
+							}
+						} while (result->NextRow());
+					}
+				} while (res->NextRow());
+			}
+		}
+
+		ObjectGuid ownerGuid = object->GetOwnerGUID();
+		if (ownerGuid)
+		{
+			Unit* owner = ObjectAccessor::GetUnit(*handler->GetSession()->GetPlayer(), ownerGuid);
+			if (!owner || !ownerGuid.IsPlayer())
+			{
+				handler->PSendSysMessage(LANG_COMMAND_DELOBJREFERCREATURE, ownerGuid.GetCounter(), object->GetGUIDLow());
+				handler->SetSentErrorMessage(true);
+				return false;
+			}
+
+			owner->RemoveGameObject(object, false);
+		}
+
+		object->SetRespawnTime(0);                                 // not save respawn time
+		object->Delete();
+		object->DeleteFromDB();
+
+		handler->PSendSysMessage(LANG_COMMAND_DELOBJMESSAGE, object->GetGUIDLow());
+
+		return true;
+	};
 #endif
 };
 
