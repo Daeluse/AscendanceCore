@@ -14,7 +14,7 @@ void CreatePhase(Player * player, bool IsMember, uint32 phase)
 	if (IsMember == false)
 	{
 		ss << "INSERT INTO phase VALUES("
-			<< "'" << player->GetGUID() << "',"
+			<< "'" << player->GetSession()->GetAccountId() << "',"
 			<< "'" << player->GetName() << "',"
 			<< "'" << player->GetSession()->GetAccountId() << "',"
 			<< "'" << phase << "',"
@@ -27,7 +27,7 @@ void CreatePhase(Player * player, bool IsMember, uint32 phase)
 	else
 	{
 		ss << "INSERT INTO phase_members VALUES("
-			<< "'" << player->GetGUID() << "',"
+			<< "'" << player->GetSession()->GetAccountId() << "',"
 			<< "'" << player->GetName() << "',"
 			<< "'" << phase << "',"
 			<< "'" << phase << "');";
@@ -85,7 +85,7 @@ public:
 			player->SetInPhase(phase, true, !player->IsInPhase(phase));
 			player->ToPlayer()->SendUpdatePhasing();
 
-			CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
+			CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetSession()->GetAccountId());
 			chat->PSendSysMessage("|cff4169E1You are now entering phase 0.|r (Default Phase)");
 
 			return true;
@@ -96,7 +96,7 @@ public:
 			player->SetInPhase(phase, true, !player->IsInPhase(phase));
 			player->ToPlayer()->SendUpdatePhasing();
 
-			CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
+			CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetSession()->GetAccountId());
 			chat->PSendSysMessage("|cff4169E1You are now entering phase 1.|r (Main Event Phase)");
 
 			return true;
@@ -107,13 +107,13 @@ public:
 			player->SetInPhase(phase, true, !player->IsInPhase(phase));
 			player->ToPlayer()->SendUpdatePhasing();
 
-			CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
+			CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetSession()->GetAccountId());
 			chat->PSendSysMessage("|cff4169E1You are now entering phase 2.|r (Main Interior Phase)");
 
 			return true;
 		}
 
-		QueryResult hasPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE guid='%u'", player->GetGUID());
+		QueryResult hasPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 		if (hasPhase)
 		{
 			do
@@ -167,18 +167,18 @@ public:
 					player->SetInPhase(phase, true, !player->IsInPhase(phase));
 					player->ToPlayer()->SendUpdatePhasing();
 
-					CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
+					CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetSession()->GetAccountId());
 					chat->PSendSysMessage("|cff4169E1You are now entering phase %u.|r (%s)", phase, phaseName);
 
 					return true;
 				}
-				else if (player->GetGUID() == fields[1].GetUInt64() && fields[2].GetUInt32() == phase)
+				else if (player->GetSession()->GetAccountId() == fields[1].GetUInt64() && fields[2].GetUInt32() == phase)
 				{
 					player->ClearPhases();
 					player->SetInPhase(phase, true, !player->IsInPhase(phase));
 					player->ToPlayer()->SendUpdatePhasing();
 
-					CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
+					CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetSession()->GetAccountId());
 					chat->PSendSysMessage("|cffffffffYou are now entering your own phase %u.|r (%s)", phase, phaseName);
 
 					return true;
@@ -187,18 +187,18 @@ public:
 				{
 					QueryResult isMember = CharacterDatabase.PQuery("SELECT guid,phase FROM phase_members WHERE phase='%u'", phase);
 					Field * members = isMember->Fetch();
-					if (members[0].GetUInt16() == player->GetGUID()) // if the player is a member
+					if (members[0].GetUInt16() == player->GetSession()->GetAccountId()) // if the player is a member
 					{
 						player->ClearPhases();
 						player->SetInPhase(phase, true, !player->IsInPhase(phase));
 						player->ToPlayer()->SendUpdatePhasing();
 
-						CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetGUID());
+						CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetSession()->GetAccountId());
 						chat->PSendSysMessage("|cffffffffYou are now entering your own phase %u.|r (%s)", phase, phaseName);
 
 						return true;
 					}
-					else if (!members[0].GetUInt16() == player->GetGUID()) // if the player is not a member
+					else if (!members[0].GetUInt16() == player->GetSession()->GetAccountId()) // if the player is not a member
 					{
 						chat->PSendSysMessage("|cffFF0000This phase isn't completed yet!|r \n Phase: %u", phase);
 
@@ -218,7 +218,7 @@ public:
 		player->ClearPhases();
 		player->ToPlayer()->SendUpdatePhasing();
 
-		CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", 0, player->GetGUID());
+		CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", 0, player->GetSession()->GetAccountId());
 		handler->PSendSysMessage("|cff4169E1You are now entering phase 0.|r (Default Phase)");
 
 		return true;
@@ -253,7 +253,7 @@ public:
 		}
 
 		QueryResult get_phase = CharacterDatabase.PQuery("SELECT phase_owned FROM phase WHERE phase='%u'", phase);
-		QueryResult check = CharacterDatabase.PQuery("SELECT phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
+		QueryResult check = CharacterDatabase.PQuery("SELECT phase_owned FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 
 		if (check)
 		{
@@ -304,12 +304,12 @@ public:
 		Player * player = chat->GetSession()->GetPlayer();
 
 		player->SetPhaseMask(0, true);
-		QueryResult res = CharacterDatabase.PQuery("SELECT * FROM phase WHERE guid='%u' LIMIT 1", player->GetGUID());
+		QueryResult res = CharacterDatabase.PQuery("SELECT * FROM phase WHERE guid='%u' LIMIT 1", player->GetSession()->GetAccountId());
 		if (!res)
 			return false;
 
-		CharacterDatabase.PExecute("DELETE FROM phase WHERE (guid='%u')", player->GetGUID());
-		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE (guid='%u')", player->GetGUID());
+		CharacterDatabase.PExecute("DELETE FROM phase WHERE (guid='%u')", player->GetSession()->GetAccountId());
+		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE (guid='%u')", player->GetSession()->GetAccountId());
 		chat->SendSysMessage("|cffFFFF00Your phase has now been deleted.|r");
 		return true;
 	};
@@ -317,7 +317,7 @@ public:
 	static bool HandlePhaseGetCommand(ChatHandler * chat, const char * args)
 	{
 		Player * player = chat->GetSession()->GetPlayer();
-		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT COUNT(*),get_phase,phase,phase_name FROM phase WHERE guid='%u'", player->GetGUID());
+		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT COUNT(*),get_phase,phase,phase_name FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 		if (!getPhaseAndOwnedPhase)
 			return false;
 
@@ -347,7 +347,7 @@ public:
 		if (!*args)
 			return false;
 
-		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE guid='%u'", player->GetGUID());
+		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 		if (isOwnerOfAPhase)
 		{
 			do
@@ -364,12 +364,12 @@ public:
 		if (argstr == "on")
 		{
 			handler->SendSysMessage("|cffFFA500You have now completed your phase! It is open for public.|r");
-			CharacterDatabase.PExecute("UPDATE phase SET has_completed='1' WHERE guid='%u'", player->GetGUID());
+			CharacterDatabase.PExecute("UPDATE phase SET has_completed='1' WHERE guid='%u'", player->GetSession()->GetAccountId());
 		}
 		else if (argstr == "off")
 		{
 			handler->SendSysMessage("|cffFFA500Your phase is no longer public!|r");
-			CharacterDatabase.PExecute("UPDATE phase SET has_completed='0' WHERE guid='%u'", player->GetGUID());
+			CharacterDatabase.PExecute("UPDATE phase SET has_completed='0' WHERE guid='%u'", player->GetSession()->GetAccountId());
 		}
 		return true;
 	};
@@ -383,7 +383,7 @@ public:
 		if (!*args)
 			return false;
 
-		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE guid='%u'", player->GetGUID());
+		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 		if (isOwnerOfAPhase)
 		{
 			do
@@ -399,7 +399,7 @@ public:
 			} while (isOwnerOfAPhase->NextRow());
 		}
 		handler->SendSysMessage("|cffFFA500You have renamed your phase.|r");
-		CharacterDatabase.PExecute("UPDATE phase SET phase_name='%s' WHERE guid='%u'", args, player->GetGUID());
+		CharacterDatabase.PExecute("UPDATE phase SET phase_name='%s' WHERE guid='%u'", args, player->GetSession()->GetAccountId());
 		return true;
 	};
 
@@ -408,7 +408,7 @@ public:
 
 		Player * player = handler->GetSession()->GetPlayer();
 		Player * target = handler->getSelectedPlayer();
-		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
+		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 		Field * fields = getPhaseAndOwnedPhase->Fetch();
 		uint32 phase_owned = fields[1].GetUInt32();
 
@@ -482,7 +482,7 @@ public:
 
 		Player * player = handler->GetSession()->GetPlayer();
 		Player * target = handler->getSelectedPlayer();
-		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetGUID());
+		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 		Field * fields = getPhaseAndOwnedPhase->Fetch();
 		uint32 phase_owned = fields[1].GetUInt32();
 
@@ -933,7 +933,7 @@ public:
 
 		if (phase)
 		{
-			QueryResult res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", player->GetGUID());
+			QueryResult res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 			if (res)
 			{
 				do
@@ -947,7 +947,7 @@ public:
 						return false;
 					}
 
-					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", player->GetGUID(), (uint32)val);
+					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", player->GetSession()->GetAccountId(), (uint32)val);
 
 					if (!result)
 					{
@@ -1081,7 +1081,7 @@ public:
 
 		if (phase)
 		{
-			QueryResult res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", player->GetGUID());
+			QueryResult res = CharacterDatabase.PQuery("SELECT get_phase FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 			if (res)
 			{
 				do
@@ -1097,7 +1097,7 @@ public:
 
 					QueryResult objectPhase = WorldDatabase.PQuery("SELECT PhaseId FROM gameobject WHERE guid='%u'", object->GetGUID());
 
-					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", player->GetGUID(), (uint32)val);
+					QueryResult result = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u' LIMIT 1", player->GetSession()->GetAccountId(), (uint32)val);
 
 					if (!result)
 					{
