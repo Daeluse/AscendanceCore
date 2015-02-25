@@ -323,7 +323,7 @@ public:
 				Field * o_fields = phaseObjects->Fetch();
 				WorldDatabase.PExecute("DELETE FROM phase WHERE (phase='%u')", o_fields[2].GetInt32());
 
-				char* id = o_fields[1].GetString;
+				const char* id = o_fields[1].GetCString;
 				if (!id)
 					return false;
 
