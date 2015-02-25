@@ -323,6 +323,32 @@ public:
 				Field * o_fields = phaseObjects->Fetch();
 				WorldDatabase.PExecute("DELETE FROM phase WHERE (phase='%u')", o_fields[2].GetInt32());
 				WorldDatabase.PExecute("DELETE FROM gameobject WHERE (guid='%u')", o_fields[0].GetInt32());
+
+				char* id = o_fields[1].GetCString;
+				if (!id)
+					return false;
+
+				uint32 guidLow = o_fields[0].GetInt32();
+				if (!guidLow)
+					return false;
+
+				GameObject* object = NULL;
+
+				// by DB guid
+				if (GameObjectData const* gameObjectData = sObjectMgr->GetGOData(guidLow))
+					object = chat->GetObjectGlobalyWithGuidOrNearWithDbGuid(guidLow, gameObjectData->id);
+
+				if (!object)
+				{
+					chat->PSendSysMessage(LANG_COMMAND_OBJNOTFOUND, guidLow);
+					chat->SetSentErrorMessage(true);
+					return false;
+				}
+
+				object->SetRespawnTime(0);                                 // not save respawn time
+				object->Delete();
+				object->DeleteFromDB();
+
 				chat->PSendSysMessage("|cffADD8E6Phased Objects Have Been Cleared!|r");
 			} while (phaseObjects->NextRow());
 		}
