@@ -190,7 +190,7 @@ public:
 			return false;
 		}
 
-		handler->PSendSysMessage("|cffFF0000%s has been world muted!|r", targetName);
+		handler->PSendSysMessage("|cffFF0000%s has been world muted!|r", targetName.c_str);
 		LoginDatabase.PExecute("INSERT INTO world_mute VALUES guid='%u' is_muted='1'", accountId);
 		return true;
 	}
@@ -218,7 +218,7 @@ public:
 			return false;
 		}
 
-		handler->PSendSysMessage("|cffFF0000%s has been unmuted!|r", targetName);
+		handler->PSendSysMessage("|cffFF0000%s has been unmuted!|r", targetName.c_str());
 		LoginDatabase.PExecute("DELETE FROM world_mute WHERE guid='%u'", accountId);
 		return true;
 	}
