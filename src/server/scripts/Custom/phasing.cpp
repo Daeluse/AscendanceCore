@@ -295,7 +295,7 @@ public:
 		if (!res)
 			return false;
 
-		QueryResult phaseObjects = WorldDatabase.PQuery("SELECT * FROM gameobject WHERE PhaseId='%u'", fields[2].GetInt32());
+		QueryResult phaseObjects = WorldDatabase.PQuery("SELECT * FROM gameobject WHERE PhaseId='%u'", fields[3].GetInt32());
 
 		CharacterDatabase.PExecute("DELETE FROM phase WHERE (guid='%u')", player->GetSession()->GetAccountId());
 		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE (guid='%u')", player->GetSession()->GetAccountId());

@@ -1,5 +1,6 @@
 #include "ScriptPCH.h"
 #include "Chat.h"
+#include "Language.h"
 
 class chat : public CommandScript
 {
@@ -25,6 +26,7 @@ public:
 		std::string msg = "";
 		Player * player = handler->GetSession()->GetPlayer();
 
+		std::string nameLink = handler->playerLink(player->GetName());
 
 		switch (player->GetSession()->GetSecurity())
 		{
@@ -32,64 +34,64 @@ public:
 			if (player->GetTeam() == ALLIANCE)
 			{
 				msg += "|cff00ff00[A] |cFF00FFFF[";
-				msg += player->GetName();
+				msg += nameLink;
 				msg += "] |cFFFFFFF0";
 			}
 			else
 			{
 				msg += "|cffff0000[H] |cFF00FFFF[";
-				msg += player->GetName();
+				msg += nameLink;
 				msg += "] |cFFFFFFF0";
 			}
 			break;
 		case SEC_MODERATOR:
 			msg += "|cffff8a00[Builder] |cFF00FFFF[";
-			msg += player->GetName();
+			msg += nameLink;
 			msg += "] |cFFFFFFF0";
 			break;
 		case SEC_GAMEMASTER:
 			msg += "|cff00ffff[Dungeon Master] |cFF00FFFF[";
-			msg += player->GetName();
+			msg += nameLink;
 			msg += "] |cFFFFFFF0";
 			break;
 		case SEC_ADMINISTRATOR:
 			msg += "|cfffa9900[Architect] |cFF00FFFF[";
-			msg += player->GetName();
+			msg += nameLink;
 			msg += "] |cFFFFFFF0";
 			break;
 		case SEC_EVENTMASTER:
 			msg += "|cfffa9900[Event Master] |cFF00FFFF[";
-			msg += player->GetName();
+			msg += nameLink;
 			msg += "] |cFFFFFFF0";
 			break;
 		case SEC_LOREMASTER:
 			msg += "|cfffa9900[Event Master] |cFF00FFFF[";
-			msg += player->GetName();
+			msg += nameLink;
 			msg += "] |cFFFFFFF0";
 			break;
 		case SEC_COMMUNITYREPRESENTATIVE:
 			msg += "|cfffa9900[Community Representative] |cFF00FFFF[";
-			msg += player->GetName();
+			msg += nameLink;
 			msg += "] |cFFFFFFF0";
 			break;
 		case SEC_STAFFMEMBER:
 			msg += "|cfffa9900[Community Manager] |cFF00FFFF[";
-			msg += player->GetName();
+			msg += nameLink;
 			msg += "] |cFFFFFFF0";
 			break;
 		case SEC_COUNCILMEMBER:
 			msg += "|cfffa9900[Council Member] |cFF00FFFF[";
-			msg += player->GetName();
+			msg += nameLink;
 			msg += "] |cFFFFFFF0";
 			break;
 		case SEC_HEADDEVELOPER:
 			msg += "|cfffa9900[Head Developer] |cFF00FFFF[";
-			msg += player->GetName();
+			msg += nameLink;
 			msg += "] |cFFFFFFF0";
 			break;
 		case SEC_CONSOLE:
 			msg += "|cfffa9900[ROOT] |cFF00FFFF[";
-			msg += player->GetName();
+			msg += nameLink;
 			msg += "] |cFFFFFFF0";
 			break;
 
