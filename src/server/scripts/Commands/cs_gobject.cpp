@@ -600,15 +600,15 @@ public:
         }
 
         char* phase = strtok (NULL, " ");
-        /*uint32 phaseMask = phase ? atoi(phase) : 0;
-        if (phaseMask == 0)
+        uint32 phaseMask = phase ? atoi(phase) : 0;
+        /*if (phaseMask == 0)
         {
             handler->SendSysMessage(LANG_BAD_VALUE);
             handler->SetSentErrorMessage(true);
             return false;
         }*/
 
-		WorldDatabase.PExecute("UPDATE gameobject SET PhaseId='%u' WHERE guid='%u'", phase, guidLow);
+		WorldDatabase.PExecute("UPDATE gameobject SET PhaseId='%u' WHERE guid='%u'", phaseMask, guidLow);
 
 		object->ClearPhases();
 		object->SetInPhase(phaseMask, true, true);
