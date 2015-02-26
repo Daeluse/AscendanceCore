@@ -109,6 +109,21 @@ public:
 		}
 
 		msg += args;
+
+		if (msg == "")
+		{
+			handler->PSendSysMessage("|cffFF0000You can not send blank messages!|r");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		if (msg == " ")
+		{
+			handler->PSendSysMessage("|cffFF0000You can not send blank messages!|r");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
 		sWorld->SendServerMessage(SERVER_MSG_STRING, msg.c_str(), 0);
 
 		return true;
