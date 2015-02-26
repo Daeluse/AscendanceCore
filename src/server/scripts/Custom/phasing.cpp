@@ -174,7 +174,7 @@ public:
 
 					return true;
 				}
-				else if (player->GetSession()->GetAccountId() == fields[1].GetUInt64() && fields[2].GetUInt32() == phase)
+				else if (player->GetSession()->GetAccountId() == fields[0].GetUInt64() && fields[2].GetUInt32() == phase)
 				{
 					player->ClearPhases();
 					player->SetInPhase(phase, true, !player->IsInPhase(phase));
@@ -188,6 +188,8 @@ public:
 				else // if the phase isn't completed
 				{
 					chat->PSendSysMessage("|cffFF0000This phase isn't completed yet!|r \n Phase: %u", phase);
+
+					chat->SetSentErrorMessage(true);
 					return false;
 				}
 			} while (isCompleted->NextRow());
@@ -775,6 +777,8 @@ public:
 		//creature->CopyPhaseFrom(chr); // creature is not directly added to world, only to db, so this is useless here
 
 		creature->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), chr->GetPhaseMask());
+
+		WorldDatabase.PExecute("UPDATE creature SET PhaseId='%u' WHERE guid='%u'", phase, creature->GetGUID);
 
 		creature->ClearPhases();
 		creature->SetInPhase(phase, true, true);

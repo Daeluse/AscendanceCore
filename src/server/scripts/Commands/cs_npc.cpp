@@ -311,6 +311,8 @@ public:
 
         creature->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), chr->GetPhaseMask());
 
+		WorldDatabase.PExecute("UPDATE creature SET PhaseId='%u' WHERE guid='%u'", phase, creature->GetGUID);
+
 		creature->ClearPhases();
 		creature->SetInPhase(phase, true, true);
 		creature->SetDBPhase(phase);
