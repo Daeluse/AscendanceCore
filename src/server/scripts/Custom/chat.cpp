@@ -1,5 +1,10 @@
 #include "ScriptPCH.h"
 #include "Chat.h"
+#include <stdarg.h>
+#include "GameObject.h"
+#include "PoolMgr.h"
+#include "ObjectAccessor.h"
+#include "Transport.h"
 #include "Language.h"
 #include "Config.h"
 
@@ -46,6 +51,21 @@ public:
 	{
 		std::string msg = "";
 		Player * player = handler->GetSession()->GetPlayer();
+
+		QueryResult worldMute = LoginDatabase.PQuery("SELECT is_muted FROM world_mute WHERE guid='%u'", player->GetSession()->GetAccountId());
+
+		if (worldMute)
+		{
+			Field * m_fields = worldMute->Fetch();
+			uint32 isMuted = m_fields[0].GetUInt32();
+
+			if (isMuted == 1)
+			{
+				handler->PSendSysMessage("|cffFF0000You are have been barred from the world chat!|r");
+				handler->SetSentErrorMessage(true);
+				return false;
+			}
+		}
 
 		std::string nameLink = handler->playerLink(player->GetName());
 
