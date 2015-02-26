@@ -293,7 +293,7 @@ public:
 		if (!res)
 			return false;
 
-		QueryResult phaseObjects = WorldDatabase.PQuery("SELECT * FROM phase WHERE phase='%u'", fields[2].GetInt32());
+		QueryResult phaseObjects = WorldDatabase.PQuery("SELECT * FROM gameobject WHERE PhaseId='%u'", fields[2].GetInt32());
 
 		CharacterDatabase.PExecute("DELETE FROM phase WHERE (guid='%u')", player->GetSession()->GetAccountId());
 		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE (guid='%u')", player->GetSession()->GetAccountId());
@@ -303,7 +303,6 @@ public:
 			do
 			{
 				Field * o_fields = phaseObjects->Fetch();
-				WorldDatabase.PExecute("DELETE FROM phase WHERE (phase='%u')", o_fields[2].GetInt32());
 
 				char* id = chat->extractKeyFromLink((char*)o_fields[1].GetCString(), "Hgameobject");
 				if (!id)
@@ -1055,11 +1054,11 @@ public:
 
 		handler->PSendSysMessage(LANG_GAMEOBJECT_ADD, objectId, objectInfo->name.c_str(), guidLow, x, y, z);
 
+		WorldDatabase.PExecute("UPDATE gameobject SET PhaseId='%u' WHERE guid='%u'", phase, guidLow);
+
 		object->ClearPhases();
 		object->SetInPhase(phase, true, true);
 		object->SetDBPhase(phase);
-
-		WorldDatabase.PExecute("INSERT INTO phase SET guid = '%u', id = '%u', phase = '%u', owner_id = '%u' ", guidLow, objectId, phase, player->GetSession()->GetAccountId());
 
 		object->SaveToDB();
 
@@ -1196,8 +1195,6 @@ public:
 		object->SetRespawnTime(0);                                 // not save respawn time
 		object->Delete();
 		object->DeleteFromDB();
-
-		WorldDatabase.PExecute("DELETE FROM phase WHERE guid = '%u' ", guidLow);
 
 		handler->PSendSysMessage(LANG_COMMAND_DELOBJMESSAGE, object->GetGUIDLow());
 
