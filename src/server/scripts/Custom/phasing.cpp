@@ -363,6 +363,20 @@ public:
 		if (!getPhaseAndOwnedPhase)
 			return false;
 
+		std::stringstream phases;
+
+		for (uint32 phase : player->GetPhases())
+		{
+			phases << phase << " ";
+		}
+
+		const char* phasing = phases.str().c_str();
+
+		uint32 phase = atoi(phasing);
+
+		if (!phase)
+			uint32 phase = 0;
+
 		if (getPhaseAndOwnedPhase)
 		{
 			do
@@ -374,7 +388,7 @@ public:
 					chat->SetSentErrorMessage(true);
 					return false;
 				}
-				chat->PSendSysMessage("|cffADD8E6Current Phase: %u \n Owned Phase: %u (%s)|r", fields[1].GetUInt32(), fields[2].GetUInt32(), fields[3].GetCString());
+				chat->PSendSysMessage("|cffADD8E6Current Phase: %u \n Owned Phase: %u (%s)|r", phase, fields[2].GetUInt32(), fields[3].GetCString());
 			} while (getPhaseAndOwnedPhase->NextRow());
 		}
 		return true;

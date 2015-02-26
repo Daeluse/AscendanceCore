@@ -354,6 +354,11 @@ public:
             me->SaveRecallPosition();
 
         me->TeleportTo(tele->mapId, tele->position_x, tele->position_y, tele->position_z, tele->orientation);
+
+		me->ClearPhases();
+		me->SetInPhase(tele->phase, true, !me->IsInPhase(tele->phase));
+		me->ToPlayer()->SendUpdatePhasing();
+
         return true;
     }
 };
