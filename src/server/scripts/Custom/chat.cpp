@@ -190,7 +190,7 @@ public:
 			return false;
 		}
 
-		handler->PSendSysMessage("|cffFF0000%s has been world muted!|r", targetName.c_str);
+		handler->PSendSysMessage("|cffFF0000%s has been world muted!|r", targetName.c_str());
 		LoginDatabase.PExecute("INSERT INTO world_mute VALUES guid='%u' is_muted='1'", accountId);
 		return true;
 	}
