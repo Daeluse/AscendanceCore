@@ -20,22 +20,23 @@ public:
 
 	static bool HandleChatCommand(ChatHandler * handler, const char * args)
 	{
-		if (!args)
-		{
-			handler->PSendSysMessage("|cffFF0000You can not send blank messages!|r");
-			handler->SetSentErrorMessage(true);
-			return false;
-		}
-
-		if (args == " ")
-		{
-			handler->PSendSysMessage("|cffFF0000You can not send blank messages!|r");
-			handler->SetSentErrorMessage(true);
-			return false;
-		}
-
 		std::string msg = "";
 		Player * player = handler->GetSession()->GetPlayer();
+
+		QueryResult getWorldMute = LoginDatabase.PQuery("SELECT guid, worldmute FROM custom WHERE guid='%u'", player->GetSession()->GetAccountId());
+
+		if (getWorldMute)
+		{
+			Field * fields = getWorldMute->Fetch();
+			uint32 isMuted = fields[1].GetUInt32();
+
+			if (isMuted == 1)
+			{
+				handler->SendSysMessage("You are not allowed to chat!");
+				handler->SetSentErrorMessage(true);
+				return false;
+			}
+		}
 
 		std::string nameLink = handler->playerLink(player->GetName());
 
@@ -108,21 +109,14 @@ public:
 
 		}
 
+		if (!args)
+		{
+			handler->PSendSysMessage("|cffFF0000You can not send blank messages!|r");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
 		msg += args;
-
-		if (msg == "")
-		{
-			handler->PSendSysMessage("|cffFF0000You can not send blank messages!|r");
-			handler->SetSentErrorMessage(true);
-			return false;
-		}
-
-		if (msg == " ")
-		{
-			handler->PSendSysMessage("|cffFF0000You can not send blank messages!|r");
-			handler->SetSentErrorMessage(true);
-			return false;
-		}
 
 		sWorld->SendServerMessage(SERVER_MSG_STRING, msg.c_str(), 0);
 
