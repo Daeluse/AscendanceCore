@@ -23,21 +23,6 @@ public:
 		std::string msg = "";
 		Player * player = handler->GetSession()->GetPlayer();
 
-		QueryResult getWorldMute = LoginDatabase.PQuery("SELECT guid, worldmute FROM custom WHERE guid='%u'", player->GetSession()->GetAccountId());
-
-		if (getWorldMute)
-		{
-			Field * fields = getWorldMute->Fetch();
-			uint32 isMuted = fields[1].GetUInt32();
-
-			if (isMuted == 1)
-			{
-				handler->SendSysMessage("You are not allowed to chat!");
-				handler->SetSentErrorMessage(true);
-				return false;
-			}
-		}
-
 		std::string nameLink = handler->playerLink(player->GetName());
 
 		switch (player->GetSession()->GetSecurity())
