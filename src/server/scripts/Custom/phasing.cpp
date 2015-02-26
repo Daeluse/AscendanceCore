@@ -152,7 +152,7 @@ public:
 			} while (hasPhase->NextRow());
 		}
 
-		QueryResult isCompleted = CharacterDatabase.PQuery("SELECT has_completed,guid,phase,phase_name FROM phase WHERE phase='%u'", phase);
+		QueryResult isCompleted = CharacterDatabase.PQuery("SELECT * FROM phase WHERE phase='%u'", phase);
 		if (!isCompleted)
 			return false;
 
@@ -161,9 +161,9 @@ public:
 			do
 			{
 				Field * fields = isCompleted->Fetch();
-				const char * phaseName = fields[3].GetCString();
+				const char * phaseName = fields[6].GetCString();
 
-				if (fields[0].GetUInt16() == 1) // if the phase is completed
+				if (fields[5].GetUInt16() == 1) // if the phase is completed
 				{
 					player->ClearPhases();
 					player->SetInPhase(phase, true, !player->IsInPhase(phase));
@@ -187,26 +187,8 @@ public:
 				}
 				else // if the phase isn't completed
 				{
-					QueryResult isMember = CharacterDatabase.PQuery("SELECT guid,phase FROM phase_members WHERE phase='%u'", phase);
-					Field * members = isMember->Fetch();
-					if (members[0].GetUInt16() == player->GetSession()->GetAccountId()) // if the player is a member
-					{
-						player->ClearPhases();
-						player->SetInPhase(phase, true, !player->IsInPhase(phase));
-						player->ToPlayer()->SendUpdatePhasing();
-
-						CharacterDatabase.PExecute("UPDATE phase SET get_phase='%u' WHERE guid='%u'", phase, player->GetSession()->GetAccountId());
-						chat->PSendSysMessage("|cffffffffYou are now entering your own phase %u.|r (%s)", phase, phaseName);
-
-						return true;
-					}
-					else if (!members[0].GetUInt16() == player->GetSession()->GetAccountId()) // if the player is not a member
-					{
-						chat->PSendSysMessage("|cffFF0000This phase isn't completed yet!|r \n Phase: %u", phase);
-
-						chat->SetSentErrorMessage(true);
-						return false;
-					}
+					chat->PSendSysMessage("|cffFF0000This phase isn't completed yet!|r \n Phase: %u", phase);
+					return false;
 				}
 			} while (isCompleted->NextRow());
 		}
