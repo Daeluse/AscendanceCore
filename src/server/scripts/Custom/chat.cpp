@@ -38,9 +38,17 @@ public:
 
 	ChatCommand * GetCommands() const
 	{
+		static ChatCommand ChatCmdTable[] =
+		{
+			{ "mute", SEC_EVENTMASTER, true, &HandleMuteCommand, "", NULL },
+			{ "unmute", SEC_EVENTMASTER, true, &HandleUnmuteCommand, "", NULL },
+			{ "", SEC_PLAYER, true, &HandleChatCommand, "", NULL },
+			{ NULL, 0, false, NULL, "", NULL }
+		};
+
 		static ChatCommand ChatCommandTable[] =
 		{
-			{ "chat", SEC_PLAYER, true, &HandleChatCommand, "", NULL },
+			{ "chat", SEC_PLAYER, true, NULL, "", ChatCmdTable },
 			{ NULL, 0, false, NULL, "", NULL }
 		};
 
@@ -156,6 +164,62 @@ public:
 
 		sWorld->SendServerMessage(SERVER_MSG_STRING, msg.c_str(), 0);
 
+		return true;
+	}
+
+	// World Mute Player
+	static bool HandleMuteCommand(ChatHandler* handler, char const* args)
+	{
+		if (!*args)
+			return false;
+
+		Player* target;
+		ObjectGuid targetGuid;
+		std::string targetName;
+
+		uint32 accountId = target ? target->GetSession()->GetAccountId() : sObjectMgr->GetPlayerAccountIdByGUID(targetGuid);
+
+		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
+			return false;
+
+		Player* player = handler->GetSession()->GetPlayer();
+		if (target == player || targetGuid == player->GetGUID())
+		{
+			handler->SendSysMessage("You cannot mute yourself!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		handler->PSendSysMessage("|cffFF0000%s has been world muted!|r", targetName);
+		LoginDatabase.PExecute("INSERT INTO world_mute VALUES guid='%u' is_muted='1'", accountId);
+		return true;
+	}
+
+	// Unmute Player
+	static bool HandleUnmuteCommand(ChatHandler* handler, char const* args)
+	{
+		if (!*args)
+			return false;
+
+		Player* target;
+		ObjectGuid targetGuid;
+		std::string targetName;
+
+		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
+			return false;
+
+		uint32 accountId = target ? target->GetSession()->GetAccountId() : sObjectMgr->GetPlayerAccountIdByGUID(targetGuid);
+
+		Player* player = handler->GetSession()->GetPlayer();
+		if (target == player || targetGuid == player->GetGUID())
+		{
+			handler->SendSysMessage("You cannot unmute yourself!");
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		handler->PSendSysMessage("|cffFF0000%s has been unmuted!|r", targetName);
+		LoginDatabase.PExecute("DELETE FROM world_mute WHERE guid='%u'", accountId);
 		return true;
 	}
 };

@@ -720,6 +720,8 @@ enum RBACPermissions
 	RBAC_PERM_COMMAND_PHASE_DeleteMember					 = 1012,
 	RBAC_PERM_COMMAND_PHASE_DeleteObject					 = 1013,
 	RBAC_PERM_COMMAND_PHASE_AddObject						 = 1014,
+	RBAC_PERM_COMMAND_CHAT_Mute								 = 1015,
+	RBAC_PERM_COMMAND_CHAT_Unmute							 = 1016,
 	RBAC_PERM_MAX
 };
 
