@@ -57,7 +57,7 @@ public:
 			}
 			break;
 		case SEC_MODERATOR:
-			msg += "|cffff8a00[Builder] ";
+			msg += "|cff00FF99[Builder] ";
 			msg += nameLink;
 			msg += " |cFFFFFFF0 : |cFF66FFFF";
 			break;
@@ -67,32 +67,32 @@ public:
 			msg += " |cFFFFFFF0 : |cFF66FFFF";
 			break;
 		case SEC_ADMINISTRATOR:
-			msg += "|cfffa9900[Architect] ";
+			msg += "|cff00FF00[Architect] ";
 			msg += nameLink;
 			msg += " |cFFFFFFF0 : |cFF66FFFF";
 			break;
 		case SEC_EVENTMASTER:
-			msg += "|cfffa9900[Event Master] ";
+			msg += "|cff00CCFF[Event Master] ";
 			msg += nameLink;
 			msg += " |cFFFFFFF0 : |cFF66FFFF";
 			break;
 		case SEC_LOREMASTER:
-			msg += "|cfffa9900[Event Master] ";
+			msg += "|cff9900FF[Lore Master] ";
 			msg += nameLink;
 			msg += " |cFFFFFFF0 : |cFF66FFFF";
 			break;
 		case SEC_COMMUNITYREPRESENTATIVE:
-			msg += "|cfffa9900[Community Representative] ";
+			msg += "|cffFF0099[Community Representative] ";
 			msg += nameLink;
 			msg += " |cFFFFFFF0 : |cFF66FFFF";
 			break;
 		case SEC_STAFFMEMBER:
-			msg += "|cfffa9900[Community Manager] ";
+			msg += "|cffFF0000[Community Manager] ";
 			msg += nameLink;
 			msg += " |cFFFFFFF0 : |cFF66FFFF";
 			break;
 		case SEC_COUNCILMEMBER:
-			msg += "|cfffa9900[Council Member] ";
+			msg += "|cffFF0000[Council Member] ";
 			msg += nameLink;
 			msg += " |cFFFFFFF0 : |cFF66FFFF";
 			break;
