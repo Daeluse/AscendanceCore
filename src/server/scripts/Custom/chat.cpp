@@ -1,6 +1,30 @@
 #include "ScriptPCH.h"
 #include "Chat.h"
 #include "Language.h"
+#include "Config.h"
+
+std::string PLAYER_H_PREFIX;
+std::string PLAYER_H_SUFFIX;
+std::string PLAYER_A_PREFIX;
+std::string PLAYER_A_SUFFIX;
+std::string BUILDER_PREFIX;
+std::string BUILDER_SUFFIX;
+std::string ARCHITECT_PREFIX;
+std::string ARCHITECT_SUFFIX;
+std::string DUNGEONMASTER_PREFIX;
+std::string DUNGEONMASTER_SUFFIX;
+std::string EVENTMASTER_PREFIX;
+std::string EVENTMASTER_SUFFIX;
+std::string LOREMASTER_PREFIX;
+std::string LOREMASTER_SUFFIX;
+std::string COMMUNITYREPRESENTATIVE_PREFIX;
+std::string COMMUNITYREPRESENTATIVE_SUFFIX;
+std::string COMMUNITYMANAGER_PREFIX;
+std::string COMMUNITYMANAGER_SUFFIX;
+std::string COUNCILMEMBER_PREFIX;
+std::string COUNCILMEMBER_SUFFIX;
+std::string HEADDEVELOPER_PREFIX;
+std::string HEADDEVELOPER_SUFFIX;
 
 class chat : public CommandScript
 {
@@ -30,61 +54,61 @@ public:
 		case SEC_PLAYER:
 			if (player->GetTeam() == ALLIANCE)
 			{
-				msg += "|cff00ff00[A] ";
+				msg += PLAYER_H_PREFIX;
 				msg += nameLink;
-				msg += " |cFFFFFFF0 : |cFF66FFFF";
+				msg += PLAYER_H_SUFFIX;
 			}
 			else
 			{
-				msg += "|cffff0000[H] ";
+				msg += PLAYER_A_PREFIX;
 				msg += nameLink;
-				msg += " |cFFFFFFF0 : |cFF66FFFF";
+				msg += PLAYER_A_SUFFIX;
 			}
 			break;
 		case SEC_MODERATOR:
-			msg += "|cff00FF99[Builder] ";
+			msg += BUILDER_PREFIX;
 			msg += nameLink;
-			msg += " |cFFFFFFF0 : |cFF66FFFF";
+			msg += BUILDER_SUFFIX;
 			break;
 		case SEC_GAMEMASTER:
-			msg += "|cff00ffff[Dungeon Master] ";
+			msg += DUNGEONMASTER_PREFIX;
 			msg += nameLink;
-			msg += " |cFFFFFFF0 : |cFF66FFFF";
+			msg += DUNGEONMASTER_SUFFIX;
 			break;
 		case SEC_ADMINISTRATOR:
-			msg += "|cff00FF00[Architect] ";
+			msg += ARCHITECT_PREFIX;
 			msg += nameLink;
-			msg += " |cFFFFFFF0 : |cFF66FFFF";
+			msg += ARCHITECT_SUFFIX;
 			break;
 		case SEC_EVENTMASTER:
-			msg += "|cff00CCFF[Event Master] ";
+			msg += EVENTMASTER_PREFIX;
 			msg += nameLink;
-			msg += " |cFFFFFFF0 : |cFF66FFFF";
+			msg += EVENTMASTER_SUFFIX;
 			break;
 		case SEC_LOREMASTER:
-			msg += "|cff9900FF[Lore Master] ";
+			msg += LOREMASTER_PREFIX;
 			msg += nameLink;
-			msg += " |cFFFFFFF0 : |cFF66FFFF";
+			msg += LOREMASTER_SUFFIX;
 			break;
 		case SEC_COMMUNITYREPRESENTATIVE:
-			msg += "|cffFF0099[Community Representative] ";
+			msg += COMMUNITYREPRESENTATIVE_PREFIX;
 			msg += nameLink;
-			msg += " |cFFFFFFF0 : |cFF66FFFF";
+			msg += COMMUNITYREPRESENTATIVE_SUFFIX;
 			break;
 		case SEC_STAFFMEMBER:
-			msg += "|cffFF0000[Community Manager] ";
+			msg += COMMUNITYMANAGER_PREFIX;
 			msg += nameLink;
-			msg += " |cFFFFFFF0 : |cFF66FFFF";
+			msg += COMMUNITYMANAGER_SUFFIX;
 			break;
 		case SEC_COUNCILMEMBER:
-			msg += "|cffFF0000[Council Member] ";
+			msg += COUNCILMEMBER_PREFIX;
 			msg += nameLink;
-			msg += " |cFFFFFFF0 : |cFF66FFFF";
+			msg += COUNCILMEMBER_SUFFIX;
 			break;
 		case SEC_HEADDEVELOPER:
-			msg += "|cfffa9900[Head Developer] ";
+			msg += HEADDEVELOPER_PREFIX;
 			msg += nameLink;
-			msg += " |cFFFFFFF0 : |cFF66FFFF";
+			msg += HEADDEVELOPER_SUFFIX;
 			break;
 		case SEC_CONSOLE:
 			msg += "|cfffa9900[ROOT] ";
@@ -106,6 +130,49 @@ public:
 		sWorld->SendServerMessage(SERVER_MSG_STRING, msg.c_str(), 0);
 
 		return true;
+	}
+};
+
+class Script_chat_WorldScript : public WorldScript
+{
+public:
+	Script_chat_WorldScript() : WorldScript("Script_chat_WorldScript") { }
+
+	void OnConfigLoad(bool /*reload*/)
+	{
+		PLAYER_H_PREFIX = sConfigMgr->GetStringDefault("PLAYER_H_PREFIX", 0);
+		PLAYER_H_SUFFIX = sConfigMgr->GetStringDefault("PLAYER_H_SUFFIX", 0);
+
+		PLAYER_A_PREFIX = sConfigMgr->GetStringDefault("PLAYER_A_PREFIX", 0);
+		PLAYER_A_SUFFIX = sConfigMgr->GetStringDefault("PLAYER_A_SUFFIX", 0);
+
+		BUILDER_PREFIX = sConfigMgr->GetStringDefault("BUILDER_PREFIX", 0);
+		BUILDER_SUFFIX = sConfigMgr->GetStringDefault("BUILDER_SUFFIX", 0);
+
+		DUNGEONMASTER_PREFIX = sConfigMgr->GetStringDefault("DUNGEONMASTER_PREFIX", 0);
+		DUNGEONMASTER_SUFFIX = sConfigMgr->GetStringDefault("DUNGEONMASTER_SUFFIX", 0);
+
+		ARCHITECT_PREFIX = sConfigMgr->GetStringDefault("ARCHITECT_PREFIX", 0);
+		ARCHITECT_SUFFIX = sConfigMgr->GetStringDefault("ARCHITECT_SUFFIX", 0);
+
+		EVENTMASTER_PREFIX = sConfigMgr->GetStringDefault("EVENTMASTER_PREFIX", 0);
+		EVENTMASTER_SUFFIX = sConfigMgr->GetStringDefault("EVENTMASTER_SUFFIX", 0);
+
+		LOREMASTER_PREFIX = sConfigMgr->GetStringDefault("LOREMASTER_PREFIX", 0);
+		LOREMASTER_SUFFIX = sConfigMgr->GetStringDefault("LOREMASTER_SUFFIX", 0);
+
+		COMMUNITYREPRESENTATIVE_PREFIX = sConfigMgr->GetStringDefault("COMMUNITYREPRESENTATIVE_SUFFIX", 0);
+		COMMUNITYREPRESENTATIVE_SUFFIX = sConfigMgr->GetStringDefault("COMMUNITYREPRESENTATIVE_SUFFIX", 0);
+
+		COMMUNITYMANAGER_PREFIX = sConfigMgr->GetStringDefault("COMMUNITYMANAGER_PREFIX", 0);
+		COMMUNITYMANAGER_SUFFIX = sConfigMgr->GetStringDefault("COMMUNITYMANAGER_SUFFIX", 0);
+
+		COUNCILMEMBER_PREFIX = sConfigMgr->GetStringDefault("COUNCILMEMBER_PREFIX", 0);
+		COUNCILMEMBER_SUFFIX = sConfigMgr->GetStringDefault("COUNCILMEMBER_SUFFIX", 0);
+
+		HEADDEVELOPER_PREFIX = sConfigMgr->GetStringDefault("HEADDEVELOPER_PREFIX", 0);
+		HEADDEVELOPER_SUFFIX = sConfigMgr->GetStringDefault("HEADDEVELOPER_SUFFIX", 0);
+
 	}
 };
 
