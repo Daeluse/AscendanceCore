@@ -35,64 +35,64 @@ public:
 			{
 				msg += "|cff00ff00[A] ";
 				msg += nameLink;
-				msg += " |cFFFFFFF0";
+				msg += " |cFFFFFFF0 : |cFF0080FF";
 			}
 			else
 			{
 				msg += "|cffff0000[H] ";
 				msg += nameLink;
-				msg += " |cFFFFFFF0";
+				msg += " |cFFFFFFF0 : |cFF0080FF";
 			}
 			break;
 		case SEC_MODERATOR:
 			msg += "|cffff8a00[Builder] ";
 			msg += nameLink;
-			msg += " |cFFFFFFF0";
+			msg += " |cFFFFFFF0 : |cFF0080FF";
 			break;
 		case SEC_GAMEMASTER:
 			msg += "|cff00ffff[Dungeon Master] ";
 			msg += nameLink;
-			msg += " |cFFFFFFF0";
+			msg += " |cFFFFFFF0 : |cFF0080FF";
 			break;
 		case SEC_ADMINISTRATOR:
 			msg += "|cfffa9900[Architect] ";
 			msg += nameLink;
-			msg += " |cFFFFFFF0";
+			msg += " |cFFFFFFF0 : |cFF0080FF";
 			break;
 		case SEC_EVENTMASTER:
 			msg += "|cfffa9900[Event Master] ";
 			msg += nameLink;
-			msg += " |cFFFFFFF0";
+			msg += " |cFFFFFFF0 : |cFF0080FF";
 			break;
 		case SEC_LOREMASTER:
 			msg += "|cfffa9900[Event Master] ";
 			msg += nameLink;
-			msg += " |cFFFFFFF0";
+			msg += " |cFFFFFFF0 : |cFF0080FF";
 			break;
 		case SEC_COMMUNITYREPRESENTATIVE:
 			msg += "|cfffa9900[Community Representative] ";
 			msg += nameLink;
-			msg += " |cFFFFFFF0";
+			msg += " |cFFFFFFF0 : |cFF0080FF";
 			break;
 		case SEC_STAFFMEMBER:
 			msg += "|cfffa9900[Community Manager] ";
 			msg += nameLink;
-			msg += " |cFFFFFFF0";
+			msg += " |cFFFFFFF0 : |cFF0080FF";
 			break;
 		case SEC_COUNCILMEMBER:
 			msg += "|cfffa9900[Council Member] ";
 			msg += nameLink;
-			msg += " |cFFFFFFF0";
+			msg += " |cFFFFFFF0 : |cFF0080FF";
 			break;
 		case SEC_HEADDEVELOPER:
 			msg += "|cfffa9900[Head Developer] ";
 			msg += nameLink;
-			msg += " |cFFFFFFF0";
+			msg += " |cFFFFFFF0 : |cFF0080FF";
 			break;
 		case SEC_CONSOLE:
 			msg += "|cfffa9900[ROOT] ";
 			msg += nameLink;
-			msg += " |cFFFFFFF0";
+			msg += " |cFFFFFFF0 : |cFF0080FF";
 			break;
 
 		}
