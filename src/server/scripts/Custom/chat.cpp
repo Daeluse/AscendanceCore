@@ -87,7 +87,7 @@ public:
 		case SEC_HEADDEVELOPER:
 			msg += "|cfffa9900[Head Developer] ";
 			msg += nameLink;
-			msg += "] |cFFFFFFF0";
+			msg += " |cFFFFFFF0";
 			break;
 		case SEC_CONSOLE:
 			msg += "|cfffa9900[ROOT] ";

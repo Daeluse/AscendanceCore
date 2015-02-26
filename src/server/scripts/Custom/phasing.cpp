@@ -51,6 +51,13 @@ public:
 
 	ChatCommand * GetCommands() const
 	{
+		static ChatCommand phaseMemberTable[] =
+		{
+			{ "add", rbac::RBAC_PERM_COMMAND_PHASE_AddMember, false, &HandlePhaseAddMemberCommand, "", NULL },
+			{ "delete", rbac::RBAC_PERM_COMMAND_PHASE_DeleteMember, false, &HandlePhaseDeleteMemberCommand, "", NULL },
+			{ NULL, 0, false, NULL, "", NULL }
+		};
+
 		static ChatCommand phaseNpcTable[] =
 		{
 			{ "add", rbac::RBAC_PERM_COMMAND_PHASE_AddNPC, false, &HandlePhaseAddNpcCommand, "", NULL },
@@ -75,8 +82,7 @@ public:
 			{ "complete", rbac::RBAC_PERM_COMMAND_PHASE_Complete, false, &HandlePhaseCompleteCommand, "", NULL },
 			{ "name", rbac::RBAC_PERM_COMMAND_PHASE_Name, false, &HandlePhaseNameCommand, "", NULL },
 			{ "kick", rbac::RBAC_PERM_COMMAND_PHASE_Kick, false, &HandlePhaseKickCommand, "", NULL },
-			{ "addmember", rbac::RBAC_PERM_COMMAND_PHASE_AddMember, false, &HandlePhaseAddMemberCommand, "", NULL },
-			{ "deletemember", rbac::RBAC_PERM_COMMAND_PHASE_DeleteMember, false, &HandlePhaseDeleteMemberCommand, "", NULL },
+			{ "member", rbac::RBAC_PERM_COMMAND_PHASE_AddMember, false, NULL, "", phaseMemberTable },
 			{ "npc", rbac::RBAC_PERM_COMMAND_PHASE_AddNPC, false, NULL, "", phaseNpcTable },
 			{ "gobj", rbac::RBAC_PERM_COMMAND_PHASE_AddObject, false, NULL, "", phaseGoTable },
 			{ NULL, 0, false, NULL, "", NULL }
