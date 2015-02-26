@@ -580,6 +580,9 @@ public:
 
 		//player->Relocate(x, y, z, player->GetOrientation());
 		player->TeleportTo(mapId, x, y, z, ort);
+
+
+
 		return true;
 	}
 
