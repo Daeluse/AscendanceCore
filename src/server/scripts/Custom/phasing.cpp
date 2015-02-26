@@ -323,8 +323,7 @@ public:
 				Field * o_fields = phaseObjects->Fetch();
 				WorldDatabase.PExecute("DELETE FROM phase WHERE (phase='%u')", o_fields[2].GetInt32());
 
-				uint32 id = o_fields[1].GetUInt32;
-
+				char* id = chat->extractKeyFromLink((char*)o_fields[1].GetCString(), "Hgameobject");
 				if (!id)
 					return false;
 
