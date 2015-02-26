@@ -72,6 +72,22 @@ public:
             return false;
         }
 
+		std::stringstream phases;
+
+		for (uint32 phase : player->GetPhases())
+		{
+			phases << phase << " ";
+		}
+
+		const char* phasing = phases.str().c_str();
+
+		uint32 phase = atoi(phasing);
+
+		if (!phase)
+		{
+			phase = 0;
+		}
+
         GameTele tele;
         tele.position_x  = player->GetPositionX();
         tele.position_y  = player->GetPositionY();
@@ -79,6 +95,7 @@ public:
         tele.orientation = player->GetOrientation();
         tele.mapId       = player->GetMapId();
         tele.name        = name;
+		tele.phase		 = phase;
 
         if (sObjectMgr->AddGameTele(tele))
         {
