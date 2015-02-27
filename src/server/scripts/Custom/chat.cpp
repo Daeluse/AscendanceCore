@@ -170,11 +170,15 @@ public:
 	// World Mute Player
 	static bool HandleMuteCommand(ChatHandler* handler, char const* args)
 	{
-		Player* target = NULL;
-		std::string playerName;
+		std::string unitName = handler->extractPlayerNameFromLink((char*)args);
 
-		if (!handler->extractPlayerTarget((char*)args, &target, NULL, &playerName))
+		Player* target;
+		ObjectGuid targetGuid;
+		std::string targetName;
+		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
 			return false;
+
+		uint32 accountId = target ? target->GetSession()->GetAccountId() : sObjectMgr->GetPlayerAccountIdByGUID(targetGuid);
 
 		if (handler->GetSession() && target == handler->GetSession()->GetPlayer())
 		{
@@ -183,18 +187,32 @@ public:
 			return false;
 		}
 
-		handler->PSendSysMessage("|cffFF0000%s has been world muted!|r", target->GetName().c_str());
-		LoginDatabase.PExecute("INSERT INTO world_mute (guid, is_muted) VALUES ('%u', '1')", target->GetSession()->GetAccountId());
+		QueryResult isMuted = LoginDatabase.PQuery("SELECT is_muted FROM world_mute WHERE guid='%u'", accountId);
+
+		if (isMuted)
+		{
+			handler->PSendSysMessage("|cffFF0000%s is already muted!|r", targetName);
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		handler->PSendSysMessage("|cffFF0000%s has been muted!|r", targetName);
+		LoginDatabase.PExecute("INSERT INTO world_mute (guid, is_muted) VALUES ('%u', '1')", accountId);
 		return true;
 	}
 
 	// Unmute Player
 	static bool HandleUnmuteCommand(ChatHandler* handler, char const* args)
 	{
-		Player* target = NULL;
-		std::string playerName;
-		if (!handler->extractPlayerTarget((char*)args, &target, NULL, &playerName))
+		std::string unitName = handler->extractPlayerNameFromLink((char*)args);
+
+		Player* target;
+		ObjectGuid targetGuid;
+		std::string targetName;
+		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
 			return false;
+
+		uint32 accountId = target ? target->GetSession()->GetAccountId() : sObjectMgr->GetPlayerAccountIdByGUID(targetGuid);
 
 		if (handler->GetSession() && target == handler->GetSession()->GetPlayer())
 		{
@@ -203,8 +221,17 @@ public:
 			return false;
 		}
 
-		handler->PSendSysMessage("|cffFF0000%s has been unmuted!|r", target->GetName().c_str());
-		LoginDatabase.PExecute("DELETE FROM world_mute WHERE guid='%u'", target->GetSession()->GetAccountId());
+		QueryResult isMuted = LoginDatabase.PQuery("SELECT is_muted FROM world_mute WHERE guid='%u'", accountId);
+
+		if (!isMuted)
+		{
+			handler->PSendSysMessage("|cffFF0000%s is not muted!|r", targetName);
+			handler->SetSentErrorMessage(true);
+			return false;
+		}
+
+		handler->PSendSysMessage("|cffFF0000%s has been unmuted!|r", targetName);
+		LoginDatabase.PExecute("DELETE FROM world_mute WHERE guid='%u'", accountId);
 		return true;
 	}
 };
