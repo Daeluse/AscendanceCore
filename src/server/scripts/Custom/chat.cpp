@@ -170,8 +170,6 @@ public:
 	// World Mute Player
 	static bool HandleMuteCommand(ChatHandler* handler, char const* args)
 	{
-		std::string unitName = handler->extractPlayerNameFromLink((char*)args);
-
 		Player* target;
 		ObjectGuid targetGuid;
 		std::string targetName;
@@ -191,12 +189,12 @@ public:
 
 		if (isMuted)
 		{
-			handler->PSendSysMessage("|cffFF0000%s is already muted!|r", targetName);
+			handler->PSendSysMessage("|cffFF0000%s is already muted!|r", (char*)args);
 			handler->SetSentErrorMessage(true);
 			return false;
 		}
 
-		handler->PSendSysMessage("|cffFF0000%s has been muted!|r", targetName);
+		handler->PSendSysMessage("|cffFF0000%s has been muted!|r", (char*)args);
 		LoginDatabase.PExecute("INSERT INTO world_mute (guid, is_muted) VALUES ('%u', '1')", accountId);
 		return true;
 	}
@@ -204,8 +202,6 @@ public:
 	// Unmute Player
 	static bool HandleUnmuteCommand(ChatHandler* handler, char const* args)
 	{
-		std::string unitName = handler->extractPlayerNameFromLink((char*)args);
-
 		Player* target;
 		ObjectGuid targetGuid;
 		std::string targetName;
@@ -225,12 +221,12 @@ public:
 
 		if (!isMuted)
 		{
-			handler->PSendSysMessage("|cffFF0000%s is not muted!|r", targetName);
+			handler->PSendSysMessage("|cffFF0000%s is not muted!|r", (char*)args);
 			handler->SetSentErrorMessage(true);
 			return false;
 		}
 
-		handler->PSendSysMessage("|cffFF0000%s has been unmuted!|r", targetName);
+		handler->PSendSysMessage("|cffFF0000%s has been unmuted!|r", (char*)args);
 		LoginDatabase.PExecute("DELETE FROM world_mute WHERE guid='%u'", accountId);
 		return true;
 	}
