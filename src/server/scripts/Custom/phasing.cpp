@@ -513,14 +513,14 @@ public:
 				Field * field = isMember->Fetch();
 				if (field[0].GetInt32() == 1)
 				{
-					handler->PSendSysMessage("|cffFF0000 %s is already a member of your phase!|r", target->GetName().c_str());
+					handler->PSendSysMessage("|cffFF0000 %s is already a member of your phase!|r", (char*)args);
 					handler->SetSentErrorMessage(true);
 					return false;
 				}
 			} while (isMember->NextRow());
 		}
 
-		handler->PSendSysMessage("|cffFFA500You successfully added %s to your phase %u.|r", targetName, phase_owned);
+		handler->PSendSysMessage("|cffFFA500You successfully added %s to your phase %u.|r", (char*)args, phase_owned);
 		CreatePhase(target, true, phase_owned);
 		return true;
 	};
@@ -579,15 +579,15 @@ public:
 				Field * field = isMember->Fetch();
 				if (field[0].GetInt32() == 0)
 				{
-					handler->PSendSysMessage("|cffFF0000 %s is not a member of your phase!|r", target->GetName().c_str());
+					handler->PSendSysMessage("|cffFF0000 %s is not a member of your phase!|r", (char*)args);
 					handler->SetSentErrorMessage(true);
 					return false;
 				}
 			} while (isMember->NextRow());
 		}
 
-		handler->PSendSysMessage("|cffFFA500You successfully removed %s from your phase %u.|r", target->GetName().c_str(), phase_owned);
-		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE guid='%u' AND phase='%u'", target->GetGUID(), phase_owned);
+		handler->PSendSysMessage("|cffFFA500You successfully removed %s from your phase %u.|r", (char*)args, phase_owned);
+		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE guid='%u' AND phase='%u'", accountId, phase_owned);
 		return true;
 	}
 
