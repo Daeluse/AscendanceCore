@@ -465,59 +465,44 @@ public:
 		Player* target;
 		ObjectGuid targetGuid;
 		std::string targetName;
-		uint32 phase_owned;
-
+		uint32 ownPhase;
 		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
 			return false;
-
-		Player * player = handler->GetSession()->GetPlayer();
-		uint32 playerId = player->GetSession()->GetAccountId();
 
 		uint32 accountId = target ? target->GetSession()->GetAccountId() : sObjectMgr->GetPlayerAccountIdByGUID(targetGuid);
 
 		if (handler->GetSession() && target == handler->GetSession()->GetPlayer())
 		{
-			handler->PSendSysMessage("You cannot add yourself!");
+			handler->PSendSysMessage("|cffFF0000You cannot add yourself!|r");
 			handler->SetSentErrorMessage(true);
 			return false;
 		}
 
-		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*), phase_owned FROM phase WHERE guid='%u'", playerId);
+		QueryResult getPhase = CharacterDatabase.PQuery("SELECT phase FROM phase WHERE guid='%u'", handler->GetSession()->GetAccountId());
 
-		if (isOwnerOfAPhase)
+		if (!getPhase)
 		{
-			do
-			{
-				Field * fields = isOwnerOfAPhase->Fetch();
-				if (fields[0].GetInt32() == 0)
-				{
-					handler->PSendSysMessage("You do not own a phase!");
-					handler->SetSentErrorMessage(true);
-					return false;
-				}
-				uint32 phase_owned = fields[1].GetInt32();
-			} while (isOwnerOfAPhase->NextRow());
+			handler->PSendSysMessage("|cffFF0000You do not own a phase!|r");
+			handler->SetSentErrorMessage(true);
+			return false;
 		}
 
-		QueryResult targetIsMember= CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u'", accountId, phase_owned);
+		Field * pfields = getPhase->Fetch();
+		ownPhase = pfields[0].GetInt32();
 
-		if (isOwnerOfAPhase)
+		QueryResult isMember = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u'", accountId, ownPhase);
+
+		Field * mfields = isMember->Fetch();
+
+		if (mfields[0].GetInt32() == 1)
 		{
-			do
-			{
-				Field * fields = isOwnerOfAPhase->Fetch();
-				if (fields[0].GetInt32() == 1)
-				{
-					handler->PSendSysMessage("%s is already a member of your phase!", (char*)args);
-					handler->SetSentErrorMessage(true);
-					return false;
-				}
-				uint32 phase_owned = fields[1].GetInt32();
-			} while (isOwnerOfAPhase->NextRow());
+			handler->PSendSysMessage("|cffFF0000%s is already a member of your phase!|r", (char*)args);
+			handler->SetSentErrorMessage(true);
+			return false;
 		}
 
-		handler->PSendSysMessage("|cffFFA500You successfully added %s to your phase %u.|r", (char*)args, phase_owned);
-		CreatePhase(target, true, phase_owned);
+		handler->PSendSysMessage("|cffFF0000%s has been added to your phase!|r", (char*)args);
+		CharacterDatabase.PExecute("INSERT INTO phase_members (guid, account_name, can_build_in_phase, phase) VALUES ('%u', '%s', '%u', '%u')", accountId, (char*)args, ownPhase, ownPhase);
 		return true;
 	};
 
@@ -527,61 +512,46 @@ public:
 		Player* target;
 		ObjectGuid targetGuid;
 		std::string targetName;
-		uint32 phase_owned;
-
+		uint32 ownPhase;
 		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
 			return false;
-
-		Player * player = handler->GetSession()->GetPlayer();
-		uint32 playerId = player->GetSession()->GetAccountId();
 
 		uint32 accountId = target ? target->GetSession()->GetAccountId() : sObjectMgr->GetPlayerAccountIdByGUID(targetGuid);
 
 		if (handler->GetSession() && target == handler->GetSession()->GetPlayer())
 		{
-			handler->PSendSysMessage("You cannot remove yourself!");
+			handler->PSendSysMessage("|cffFF0000You cannot remove yourself!|r");
 			handler->SetSentErrorMessage(true);
 			return false;
 		}
 
-		QueryResult isOwnerOfAPhase = CharacterDatabase.PQuery("SELECT COUNT(*), phase_owned FROM phase WHERE guid='%u'", playerId);
+		QueryResult getPhase = CharacterDatabase.PQuery("SELECT phase FROM phase WHERE guid='%u'", handler->GetSession()->GetAccountId());
 
-		if (isOwnerOfAPhase)
+		if (!getPhase)
 		{
-			do
-			{
-				Field * fields = isOwnerOfAPhase->Fetch();
-				if (fields[0].GetInt32() == 0)
-				{
-					handler->PSendSysMessage("You do not own a phase!");
-					handler->SetSentErrorMessage(true);
-					return false;
-				}
-				uint32 phase_owned = fields[1].GetInt32();
-			} while (isOwnerOfAPhase->NextRow());
+			handler->PSendSysMessage("|cffFF0000You do not own a phase!|r");
+			handler->SetSentErrorMessage(true);
+			return false;
 		}
 
-		QueryResult targetIsMember = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u'", accountId, phase_owned);
+		Field * pfields = getPhase->Fetch();
+		ownPhase = pfields[0].GetInt32();
 
-		if (isOwnerOfAPhase)
+		QueryResult isMember = CharacterDatabase.PQuery("SELECT COUNT(*) FROM phase_members WHERE guid='%u' AND phase='%u'", accountId, ownPhase);
+
+		Field * mfields = isMember->Fetch();
+
+		if (mfields[0].GetInt32() == 0)
 		{
-			do
-			{
-				Field * fields = isOwnerOfAPhase->Fetch();
-				if (fields[0].GetInt32() == 0)
-				{
-					handler->PSendSysMessage("%s is not a member of your phase!", (char*)args);
-					handler->SetSentErrorMessage(true);
-					return false;
-				}
-				uint32 phase_owned = fields[1].GetInt32();
-			} while (isOwnerOfAPhase->NextRow());
+			handler->PSendSysMessage("|cffFF0000%s is not a member of your phase!|r", (char*)args);
+			handler->SetSentErrorMessage(true);
+			return false;
 		}
 
-		handler->PSendSysMessage("|cffFFA500You successfully removed %s from your phase %u.|r", (char*)args, phase_owned);
-		CreatePhase(target, true, phase_owned);
+		handler->PSendSysMessage("|cffFF0000%s has been added to your phase!|r", (char*)args);
+		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE guid = '%u' AND phase = '%u'", accountId, ownPhase);
 		return true;
-	}
+	};
 
 	static bool HandlePhaseKickCommand(ChatHandler * handler, const char * /*args*/)
 	{
