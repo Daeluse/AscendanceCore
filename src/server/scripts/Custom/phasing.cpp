@@ -548,7 +548,7 @@ public:
 			return false;
 		}
 
-		handler->PSendSysMessage("|cffFF0000%s has been added to your phase!|r", (char*)args);
+		handler->PSendSysMessage("|cffFF0000%s has been removed from your phase!|r", (char*)args);
 		CharacterDatabase.PExecute("DELETE FROM phase_members WHERE guid = '%u' AND phase = '%u'", accountId, ownPhase);
 		return true;
 	};
