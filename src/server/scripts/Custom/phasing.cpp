@@ -541,7 +541,7 @@ public:
 	};
 
 
-	static bool HandlePhaseDeleteMemberCommand(ChatHandler * handler, const char * /*args*/)
+	static bool HandlePhaseDeleteMemberCommand(ChatHandler * handler, const char * args)
 	{
 		Player* target;
 		ObjectGuid targetGuid;
