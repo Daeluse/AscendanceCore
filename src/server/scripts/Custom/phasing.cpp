@@ -469,7 +469,11 @@ public:
 		handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName);
 
 		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
+		{
+			handler->SendSysMessage("You must select a target!");
+			handler->SetSentErrorMessage(true);
 			return false;
+		}
 
 		Player * player = handler->GetSession()->GetPlayer();
 
@@ -478,13 +482,6 @@ public:
 		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 		Field * fields = getPhaseAndOwnedPhase->Fetch();
 		uint32 phase_owned = fields[1].GetUInt32();
-
-		if (!target)
-		{
-			handler->SendSysMessage("You must select a target!");
-			handler->SetSentErrorMessage(true);
-			return false;
-		}
 
 		if (target == player)
 		{
@@ -553,7 +550,11 @@ public:
 		handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName);
 
 		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
+		{
+			handler->SendSysMessage("You must select a target!");
+			handler->SetSentErrorMessage(true);
 			return false;
+		}
 
 		Player * player = handler->GetSession()->GetPlayer();
 
@@ -562,13 +563,6 @@ public:
 		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 		Field * fields = getPhaseAndOwnedPhase->Fetch();
 		uint32 phase_owned = fields[1].GetUInt32();
-
-		if (!target)
-		{
-			handler->SendSysMessage("You must select a target!");
-			handler->SetSentErrorMessage(true);
-			return false;
-		}
 
 		if (target == player)
 		{
