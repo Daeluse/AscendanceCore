@@ -460,11 +460,18 @@ public:
 		return true;
 	};
 
-	static bool HandlePhaseAddMemberCommand(ChatHandler * handler, const char * /*args*/)
+	static bool HandlePhaseAddMemberCommand(ChatHandler * handler, const char * args)
 	{
+		Player* target;
+		ObjectGuid targetGuid;
+		std::string targetName;
+		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
+			return false;
 
 		Player * player = handler->GetSession()->GetPlayer();
-		Player * target = handler->getSelectedPlayer();
+
+		uint32 accountId = target ? target->GetSession()->GetAccountId() : sObjectMgr->GetPlayerAccountIdByGUID(targetGuid);
+
 		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 		Field * fields = getPhaseAndOwnedPhase->Fetch();
 		uint32 phase_owned = fields[1].GetUInt32();
@@ -536,9 +543,16 @@ public:
 
 	static bool HandlePhaseDeleteMemberCommand(ChatHandler * handler, const char * /*args*/)
 	{
+		Player* target;
+		ObjectGuid targetGuid;
+		std::string targetName;
+		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
+			return false;
 
 		Player * player = handler->GetSession()->GetPlayer();
-		Player * target = handler->getSelectedPlayer();
+
+		uint32 accountId = target ? target->GetSession()->GetAccountId() : sObjectMgr->GetPlayerAccountIdByGUID(targetGuid);
+
 		QueryResult getPhaseAndOwnedPhase = CharacterDatabase.PQuery("SELECT get_phase, phase_owned FROM phase WHERE guid='%u'", player->GetSession()->GetAccountId());
 		Field * fields = getPhaseAndOwnedPhase->Fetch();
 		uint32 phase_owned = fields[1].GetUInt32();
