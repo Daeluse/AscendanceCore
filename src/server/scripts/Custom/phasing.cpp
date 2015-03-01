@@ -465,6 +465,9 @@ public:
 		Player* target;
 		ObjectGuid targetGuid;
 		std::string targetName;
+
+		handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName);
+
 		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
 			return false;
 
@@ -546,6 +549,9 @@ public:
 		Player* target;
 		ObjectGuid targetGuid;
 		std::string targetName;
+
+		handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName);
+
 		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
 			return false;
 
