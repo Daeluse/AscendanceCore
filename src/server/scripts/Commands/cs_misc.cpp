@@ -2594,7 +2594,7 @@ public:
         if (!unit)
             unit = handler->GetSession()->GetPlayer();
 
-        unit->RemoveCharmAuras();
+        unit->RemoveAura(530);
 
         return true;
     }
