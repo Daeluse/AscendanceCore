@@ -1022,13 +1022,13 @@ public:
 
 		handler->PSendSysMessage(LANG_GAMEOBJECT_ADD, objectId, objectInfo->name.c_str(), guidLow, x, y, z);
 
-		WorldDatabase.PExecute("UPDATE gameobject SET PhaseId='%u' WHERE guid='%u'", phase, guidLow);
-
 		object->ClearPhases();
 		object->SetInPhase(phase, true, true);
 		object->SetDBPhase(phase);
 
 		object->SaveToDB();
+
+		WorldDatabase.PExecute("UPDATE gameobject SET PhaseId='%u' WHERE guid='%u'", phase, guidLow);
 
 		return true;
 	}

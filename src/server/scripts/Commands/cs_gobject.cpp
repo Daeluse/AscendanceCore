@@ -40,7 +40,7 @@ public:
     ChatCommand* GetCommands() const override
     {
         static ChatCommand gobjectAddCommandTable[] =
-        {
+        {addcommand
             { "temp", rbac::RBAC_PERM_COMMAND_GOBJECT_ADD_TEMP, false, &HandleGameObjectAddTempCommand,   "", NULL },
             { "",     rbac::RBAC_PERM_COMMAND_GOBJECT_ADD,      false, &HandleGameObjectAddCommand,       "", NULL },
             { NULL,   0,                                  false, NULL,                              "", NULL }
@@ -245,12 +245,12 @@ public:
 
         handler->PSendSysMessage(LANG_GAMEOBJECT_ADD, objectId, objectInfo->name.c_str(), guidLow, x, y, z);
 
-		WorldDatabase.PExecute("UPDATE gameobject SET PhaseId='%u' WHERE guid='%u'", phase, guidLow);
-
 		object->ClearPhases();
 		object->SetInPhase(phase, true, true);
 		object->SetDBPhase(phase);
 		object->SaveToDB();
+
+		WorldDatabase.PExecute("UPDATE gameobject SET PhaseId='%u' WHERE guid='%u'", phase, guidLow);
 
         return true;
     }
