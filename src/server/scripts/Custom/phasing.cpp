@@ -389,7 +389,7 @@ public:
 					chat->SetSentErrorMessage(true);
 					return false;
 				}
-				chat->PSendSysMessage("|cffADD8E6Current Phase: %u \n Owned Phase: %u (%s)|r", phase, fields[2].GetUInt32(), fields[3].GetCString());
+				chat->PSendSysMessage("|cffADD8E6Current Phase: %u \n Actual Phase: %u \n Owned Phase: %u (%s)|r", phase, fields[2].GetUInt32(), phase, fields[3].GetCString());
 			} while (getPhaseAndOwnedPhase->NextRow());
 		}
 		return true;
