@@ -40,7 +40,7 @@ public:
     ChatCommand* GetCommands() const override
     {
         static ChatCommand gobjectAddCommandTable[] =
-        {addcommand
+        {
             { "temp", rbac::RBAC_PERM_COMMAND_GOBJECT_ADD_TEMP, false, &HandleGameObjectAddTempCommand,   "", NULL },
             { "",     rbac::RBAC_PERM_COMMAND_GOBJECT_ADD,      false, &HandleGameObjectAddCommand,       "", NULL },
             { NULL,   0,                                  false, NULL,                              "", NULL }
