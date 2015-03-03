@@ -323,7 +323,7 @@ public:
 
             std::string chrNameLink = handler->playerLink(targetName);
 
-            Map* map = target->GetMap();
+            /*Map* map = target->GetMap();
             if (map->IsBattlegroundOrArena())
             {
                 // only allow if gm mode is on
@@ -387,7 +387,7 @@ public:
                     _player->SetRaidDifficulty(target->GetRaidDifficulty());
                 else
                     _player->SetDungeonDifficulty(target->GetDungeonDifficulty());
-            }
+            }*/
 
             handler->PSendSysMessage(LANG_APPEARING_AT, chrNameLink.c_str());
 
@@ -492,7 +492,7 @@ public:
                 return false;
             }
 
-            Map* map = handler->GetSession()->GetPlayer()->GetMap();
+            /*Map* map = handler->GetSession()->GetPlayer()->GetMap();
 
             if (map->IsBattlegroundOrArena())
             {
@@ -531,7 +531,7 @@ public:
                     handler->SetSentErrorMessage(true);
                     return false;
                 }
-            }
+            }*/
 
             handler->PSendSysMessage(LANG_SUMMONING, nameLink.c_str(), "");
             if (handler->needReportToTarget(target))
