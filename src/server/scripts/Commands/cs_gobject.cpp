@@ -49,6 +49,7 @@ public:
         {
             { "phase", rbac::RBAC_PERM_COMMAND_GOBJECT_SET_PHASE, false, &HandleGameObjectSetPhaseCommand,  "", NULL },
             { "state", rbac::RBAC_PERM_COMMAND_GOBJECT_SET_STATE, false, &HandleGameObjectSetStateCommand,  "", NULL },
+			{ "scale", rbac::RBAC_PERM_COMMAND_GOBJECT_SET_SCALE, false, &HandleGameObjectScaleCommand,     "", NULL },
             { NULL,    0,                                   false, NULL,                              "", NULL }
         };
         static ChatCommand gobjectCommandTable[] =
@@ -71,6 +72,50 @@ public:
         };
         return commandTable;
     }
+
+	static bool HandleGameObjectScaleCommand(ChatHandler* handler, char const* args)
+		{
+		if (!*args)
+			return false;
+		
+			char* id = handler->extractKeyFromLink((char*)args, "Hgameobject");
+		if (!id)
+			return false;
+		
+			uint32 guidLow = atoi(id);
+		if (!guidLow)
+			return false;
+		
+			GameObject* object = NULL;
+		
+			        // by DB guid
+			if (GameObjectData const* goData = sObjectMgr->GetGOData(guidLow))
+			object = handler->GetObjectGlobalyWithGuidOrNearWithDbGuid(guidLow, goData->id);
+		
+			if (!object)
+			{
+			handler->PSendSysMessage(LANG_COMMAND_OBJNOTFOUND, guidLow);
+			handler->SetSentErrorMessage(true);
+			return false;
+			}
+		
+			char* scale_temp = strtok(NULL, " ");
+		float scale = scale_temp ? atof(scale_temp) : -1.0f;
+		if (scale > 30.0f || scale < 0.0f)
+			{
+			handler->SendSysMessage(LANG_BAD_VALUE);
+			handler->SetSentErrorMessage(true);
+			return false;
+			}
+		
+			        // set scale
+		object->SetObjectScale(scale);
+		object->DestroyForNearbyPlayers();
+		object->UpdateObjectVisibility();
+		object->SaveToDB();
+		
+			return true;
+		}
 
     static bool HandleGameObjectActivateCommand(ChatHandler* handler, char const* args)
     {
@@ -149,6 +194,20 @@ public:
         float o = float(player->GetOrientation());
         Map* map = player->GetMap();
 
+		std::stringstream phases;
+
+		for (uint32 phase : player->GetPhases())
+		{
+			phases << phase << " ";
+		}
+
+		const char* phasing = phases.str().c_str();
+
+		uint32 phase = atoi(phasing);
+
+		if (!phase)
+			uint32 phase = 0;
+
         GameObject* object = new GameObject;
         uint32 guidLow = sObjectMgr->GenerateLowGuid(HIGHGUID_GAMEOBJECT);
 
@@ -158,7 +217,7 @@ public:
             return false;
         }
 
-        object->CopyPhaseFrom(player);
+        /*object->CopyPhaseFrom(player);*/
 
         if (spawntimeSecs)
         {
@@ -168,6 +227,7 @@ public:
 
         // fill the gameobject data and save to the db
         object->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), player->GetPhaseMask());
+
         // delete the old object and do a clean load from DB with a fresh new GameObject instance.
         // this is required to avoid weird behavior and memory leaks
         delete object;
@@ -184,6 +244,14 @@ public:
         sObjectMgr->AddGameobjectToGrid(guidLow, sObjectMgr->GetGOData(guidLow));
 
         handler->PSendSysMessage(LANG_GAMEOBJECT_ADD, objectId, objectInfo->name.c_str(), guidLow, x, y, z);
+
+		object->ClearPhases();
+		object->SetInPhase(phase, true, true);
+		object->SetDBPhase(phase);
+		object->SaveToDB();
+
+		WorldDatabase.PExecute("UPDATE gameobject SET PhaseId='%u' WHERE guid='%u'", phase, guidLow);
+
         return true;
     }
 
@@ -507,9 +575,9 @@ public:
     }
 
     //set phasemask for selected object
-    static bool HandleGameObjectSetPhaseCommand(ChatHandler* /*handler*/, char const* /*args*/)
+    static bool HandleGameObjectSetPhaseCommand(ChatHandler* handler, char const* args)
     {
-        /*// number or [name] Shift-click form |color|Hgameobject:go_id|h[name]|h|r
+        // number or [name] Shift-click form |color|Hgameobject:go_id|h[name]|h|r
         char* id = handler->extractKeyFromLink((char*)args, "Hgameobject");
         if (!id)
             return false;
@@ -533,14 +601,21 @@ public:
 
         char* phase = strtok (NULL, " ");
         uint32 phaseMask = phase ? atoi(phase) : 0;
-        if (phaseMask == 0)
+        /*if (phaseMask == 0)
         {
             handler->SendSysMessage(LANG_BAD_VALUE);
             handler->SetSentErrorMessage(true);
             return false;
-        }
+        }*/
 
-        object->SetPhaseMask(phaseMask, true);
+		WorldDatabase.PExecute("UPDATE gameobject SET PhaseId='%u' WHERE guid='%u'", phaseMask, guidLow);
+
+		object->ClearPhases();
+		object->SetInPhase(phaseMask, true, true);
+		object->SetDBPhase(phaseMask);
+		object->SaveToDB();
+
+        /*object->SetPhaseMask(phaseMask, true);
         object->SaveToDB();*/
         return true;
     }

@@ -285,7 +285,7 @@ public:
         Player* target;
         ObjectGuid targetGuid;
         std::string targetName;
-        if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
+		if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
             return false;
 
         Player* _player = handler->GetSession()->GetPlayer();
@@ -296,15 +296,34 @@ public:
             return false;
         }
 
+		bool isAdmin;
+
+		QueryResult result = LoginDatabase.PQuery("SELECT COUNT(*) FROM account_access WHERE id = '%u' AND gmlevel >= 1", _player->GetGUID());
+		Field * fields = result->Fetch();
+
+		if (fields[0].GetInt32() >= 1)
+		{
+			isAdmin = true;
+		}
+		else
+			isAdmin = false;
+
         if (target)
         {
             // check online security
             if (handler->HasLowerSecurity(target, ObjectGuid::Empty))
                 return false;
 
+			// check appear status
+			if (!target->GetCommandStatus(TOGGLE_APPEAR) && !isAdmin)
+			{
+				handler->PSendSysMessage("%s has appear toggled off. You can't appear to him/her.", (targetName).c_str());
+				return true;
+			}
+
             std::string chrNameLink = handler->playerLink(targetName);
 
-            Map* map = target->GetMap();
+            /*Map* map = target->GetMap();
             if (map->IsBattlegroundOrArena())
             {
                 // only allow if gm mode is on
@@ -368,7 +387,7 @@ public:
                     _player->SetRaidDifficulty(target->GetRaidDifficulty());
                 else
                     _player->SetDungeonDifficulty(target->GetDungeonDifficulty());
-            }
+            }*/
 
             handler->PSendSysMessage(LANG_APPEARING_AT, chrNameLink.c_str());
 
@@ -439,12 +458,32 @@ public:
             return false;
         }
 
+		bool isAdmin;
+
+		QueryResult result = LoginDatabase.PQuery("SELECT COUNT(*) FROM account_access WHERE id = '%u' AND gmlevel >= 1", _player->GetGUID());
+		Field * fields = result->Fetch();
+
+		if (fields[0].GetInt32() >= 1)
+		{
+			isAdmin = true;
+		}
+		else
+			isAdmin = false;
+
         if (target)
         {
             std::string nameLink = handler->playerLink(targetName);
             // check online security
             if (handler->HasLowerSecurity(target, ObjectGuid::Empty))
                 return false;
+
+			// check summon toggle
+
+			if (!target->GetCommandStatus(TOGGLE_SUMMON) && !isAdmin)
+			{
+				handler->PSendSysMessage("%s has summon toggled off. You can't summon him/her.", (targetName).c_str());
+				return true;
+			}
 
             if (target->IsBeingTeleported())
             {
@@ -453,7 +492,7 @@ public:
                 return false;
             }
 
-            Map* map = handler->GetSession()->GetPlayer()->GetMap();
+            /*Map* map = handler->GetSession()->GetPlayer()->GetMap();
 
             if (map->IsBattlegroundOrArena())
             {
@@ -492,7 +531,7 @@ public:
                     handler->SetSentErrorMessage(true);
                     return false;
                 }
-            }
+            }*/
 
             handler->PSendSysMessage(LANG_SUMMONING, nameLink.c_str(), "");
             if (handler->needReportToTarget(target))
@@ -2556,6 +2595,7 @@ public:
             unit = handler->GetSession()->GetPlayer();
 
         unit->RemoveCharmAuras();
+		unit->CombatStop();
 
         return true;
     }

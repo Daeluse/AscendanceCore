@@ -49,6 +49,7 @@ public:
             { "zonexy",    rbac::RBAC_PERM_COMMAND_GO_ZONEXY,    false, &HandleGoZoneXYCommand,    "", NULL },
             { "xyz",       rbac::RBAC_PERM_COMMAND_GO_XYZ,       false, &HandleGoXYZCommand,       "", NULL },
             { "ticket",    rbac::RBAC_PERM_COMMAND_GO_TICKET,    false, &HandleGoTicketCommand,    "", NULL },
+			{ "rel",	   rbac::RBAC_PERM_COMMAND_GO_XYZ,		 false, &HandleGoRelCommand,	   "", NULL },
             { "",          rbac::RBAC_PERM_COMMAND_GO,           false, &HandleGoXYZCommand,       "", NULL },
             { NULL,        0,                              false, NULL,                      "", NULL }
         };
@@ -543,6 +544,45 @@ public:
         player->TeleportTo(mapId, x, y, z, ort);
         return true;
     }
+
+	//relative teleport at coordinates, including Z and orientation
+	static bool HandleGoRelCommand(ChatHandler* handler, char const* args)
+	{
+		if (!*args)
+			return false;
+
+		Player* player = handler->GetSession()->GetPlayer();
+
+		char* goX = strtok((char*)args, " ");
+		char* goY = strtok(NULL, " ");
+		char* goZ = strtok(NULL, " ");
+
+		if (!goX || !goY || !goZ)
+			return false;
+
+		float newx = (float)atof(goX);
+		float newy = (float)atof(goY);
+		float newz = (float)atof(goZ);
+
+		float curx = player->GetPositionX();
+		float cury = player->GetPositionY();
+		float curz = player->GetPositionZ();
+
+		float x = newx + curx;
+		float y = newy + cury;
+		float z = newz + curz;
+		float ort = player->GetOrientation();
+		uint32 mapId = player->GetMapId();
+
+		using namespace std;
+
+		player->SaveRecallPosition();
+
+		//player->Relocate(x, y, z, player->GetOrientation());
+		player->TeleportTo(mapId, x, y, z, ort);
+
+		return true;
+	}
 
     static bool HandleGoTicketCommand(ChatHandler* handler, char const* args)
     {
