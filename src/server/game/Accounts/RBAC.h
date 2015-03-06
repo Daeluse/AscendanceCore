@@ -700,9 +700,29 @@ enum RBACPermissions
     RBAC_PERM_COMMAND_GUILD_INFO                             = 794,
     RBAC_PERM_COMMAND_INSTANCE_SET_BOSS_STATE                = 795,
     RBAC_PERM_COMMAND_INSTANCE_GET_BOSS_STATE                = 796,
+	RBAC_PERM_COMMAND_GOBJECT_SET_SCALE						 = 803,
 
     // custom permissions 1000+
-    RBAC_PERM_MAX
+
+	// phasing System
+	RBAC_PERM_COMMAND_PHASE									 = 1000,
+	RBAC_PERM_COMMAND_PHASE_Join							 = 1001,
+	RBAC_PERM_COMMAND_PHASE_Leave							 = 1002,
+	RBAC_PERM_COMMAND_PHASE_Create							 = 1003,
+	RBAC_PERM_COMMAND_PHASE_Delete							 = 1004,
+	RBAC_PERM_COMMAND_PHASE_Get								 = 1005,
+	RBAC_PERM_COMMAND_PHASE_Complete						 = 1006,
+	RBAC_PERM_COMMAND_PHASE_Name							 = 1007,
+	RBAC_PERM_COMMAND_PHASE_Kick							 = 1008,
+	RBAC_PERM_COMMAND_PHASE_AddMember						 = 1009,
+	RBAC_PERM_COMMAND_PHASE_DeleteNPC						 = 1010,
+	RBAC_PERM_COMMAND_PHASE_AddNPC							 = 1011,
+	RBAC_PERM_COMMAND_PHASE_DeleteMember					 = 1012,
+	RBAC_PERM_COMMAND_PHASE_DeleteObject					 = 1013,
+	RBAC_PERM_COMMAND_PHASE_AddObject						 = 1014,
+	RBAC_PERM_COMMAND_CHAT_Mute								 = 1015,
+	RBAC_PERM_COMMAND_CHAT_Unmute							 = 1016,
+	RBAC_PERM_MAX
 };
 
 enum RBACCommandResult

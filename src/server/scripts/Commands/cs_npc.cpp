@@ -253,12 +253,31 @@ public:
         if (!sObjectMgr->GetCreatureTemplate(id))
             return false;
 
+		/*char* phaseID = strtok((char*)NULL, " ");
+		if (!phaseID)
+			return true;
+		uint32 phase = atoi(phaseID);*/
+
         Player* chr = handler->GetSession()->GetPlayer();
         float x = chr->GetPositionX();
         float y = chr->GetPositionY();
         float z = chr->GetPositionZ();
         float o = chr->GetOrientation();
         Map* map = chr->GetMap();
+
+		std::stringstream phases;
+
+		for (uint32 phase : chr->GetPhases())
+		{
+			phases << phase << " ";
+		}
+
+		const char* phasing = phases.str().c_str();
+
+		uint32 phase = atoi(phasing);
+
+		if (!phase)
+			uint32 phase = 0;
 
         if (Transport* trans = chr->GetTransport())
         {
@@ -292,6 +311,13 @@ public:
 
         creature->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), chr->GetPhaseMask());
 
+		WorldDatabase.PExecute("UPDATE creature SET PhaseId='%u' WHERE guid='%u'", phase, creature->GetGUID());
+
+		creature->ClearPhases();
+		creature->SetInPhase(phase, true, true);
+		creature->SetDBPhase(phase);
+		creature->SaveToDB();
+		 
         uint32 db_guid = creature->GetDBTableGUIDLow();
 
         // To call _LoadGoods(); _LoadQuests(); CreateTrainerSpells()

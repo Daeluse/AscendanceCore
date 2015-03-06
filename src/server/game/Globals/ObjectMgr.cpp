@@ -1986,8 +1986,8 @@ void ObjectMgr::LoadGameobjects()
 
     //                                                0                1   2    3           4           5           6
     QueryResult result = WorldDatabase.Query("SELECT gameobject.guid, id, map, position_x, position_y, position_z, orientation, "
-    //   7          8          9          10         11             12            13     14         15         16          17           18        19
-        "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, eventEntry, pool_entry, phaseid, phasegroup "
+    //   7          8          9          10         11             12            13     14         15         16          17           18        19        20
+        "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, eventEntry, pool_entry, phaseid, phasegroup, size "
         "FROM gameobject LEFT OUTER JOIN game_event_gameobject ON gameobject.guid = game_event_gameobject.guid "
         "LEFT OUTER JOIN pool_gameobject ON gameobject.guid = pool_gameobject.guid");
 
@@ -2089,6 +2089,13 @@ void ObjectMgr::LoadGameobjects()
         uint32 PoolId       = fields[17].GetUInt32();
         data.phaseid = fields[18].GetUInt32();
         data.phaseGroup = fields[19].GetUInt32();
+		data.size = fields[20].GetFloat();
+
+		if (data.size > 30.0f || data.size < 0.0f)
+		{
+			TC_LOG_ERROR("sql.sql", "Table `gameobject` has gameobject (GUID %U Entry: %u) with invalid size (%f) value, skip", guid, data.id, data.size);
+			continue;
+		}
 
         if (data.phaseGroup && GetPhasesForGroup(data.phaseGroup).empty())
         {
@@ -2573,11 +2580,15 @@ void ObjectMgr::LoadItemTemplates()
         itemTemplate.Unk430_1 = sparse->Unk430_1;
         itemTemplate.Unk430_2 = sparse->Unk430_2;
         itemTemplate.BuyCount = std::max(sparse->BuyCount, 1u);
-        itemTemplate.BuyPrice = sparse->BuyPrice;
-        itemTemplate.SellPrice = sparse->SellPrice;
+//        itemTemplate.BuyPrice = sparse->BuyPrice;
+// 		  itemTemplate.SellPrice = sparse->SellPrice;
+		itemTemplate.BuyPrice = 0; //Override all item-sparse.db2 Buy Prices
+        itemTemplate.SellPrice = 0;//Override all item-sparse.db2 Sell Prices
         itemTemplate.InventoryType = db2Data->InventoryType;
-        itemTemplate.AllowableClass = sparse->AllowableClass;
-        itemTemplate.AllowableRace = sparse->AllowableRace;
+//      itemTemplate.AllowableClass = sparse->AllowableClass;
+//      itemTemplate.AllowableRace = sparse->AllowableRace;
+		itemTemplate.AllowableClass = -1; //Override all item-sparse.db2 Class Requirements
+		itemTemplate.AllowableRace = -1;  //Override all item-sparse.db2 Race Requirements
         itemTemplate.ItemLevel = sparse->ItemLevel;
         itemTemplate.RequiredLevel = sparse->RequiredLevel;
         itemTemplate.RequiredSkill = sparse->RequiredSkill;
@@ -2620,7 +2631,8 @@ void ObjectMgr::LoadItemTemplates()
         }
 
         itemTemplate.SpellPPMRate = 0.0f;
-        itemTemplate.Bonding = sparse->Bonding;
+//        itemTemplate.Bonding = sparse->Bonding;
+		itemTemplate.Bonding = 0; //Override all item-sparse.db2 Bonding Types
         itemTemplate.Description = sparse->Description->Str[sWorld->GetDefaultDbcLocale()];
         itemTemplate.PageText = sparse->PageText;
         itemTemplate.LanguageID = sparse->LanguageID;
@@ -8015,8 +8027,8 @@ void ObjectMgr::LoadGameTele()
 
     _gameTeleStore.clear();                                  // for reload case
 
-    //                                                0       1           2           3           4        5     6
-    QueryResult result = WorldDatabase.Query("SELECT id, position_x, position_y, position_z, orientation, map, name FROM game_tele");
+    //                                                0       1           2           3           4        5     6	   7
+    QueryResult result = WorldDatabase.Query("SELECT id, position_x, position_y, position_z, orientation, map, name, phase FROM game_tele");
 
     if (!result)
     {
@@ -8040,6 +8052,7 @@ void ObjectMgr::LoadGameTele()
         gt.orientation    = fields[4].GetFloat();
         gt.mapId          = fields[5].GetUInt16();
         gt.name           = fields[6].GetString();
+		gt.phase		  = fields[7].GetUInt32();
 
         if (!MapManager::IsValidMapCoord(gt.mapId, gt.position_x, gt.position_y, gt.position_z, gt.orientation))
         {
@@ -8133,6 +8146,7 @@ bool ObjectMgr::AddGameTele(GameTele& tele)
     stmt->setFloat(4, tele.orientation);
     stmt->setUInt16(5, uint16(tele.mapId));
     stmt->setString(6, tele.name);
+	stmt->setUInt32(7, tele.phase);
 
     WorldDatabase.Execute(stmt);
 

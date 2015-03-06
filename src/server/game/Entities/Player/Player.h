@@ -566,7 +566,7 @@ enum PlayerFieldByte2Flags
 
 enum MirrorTimerType
 {
-    FATIGUE_TIMER      = 0,
+    FATIGUE_TIMER      = -1,
     BREATH_TIMER       = 1,
     FIRE_TIMER         = 2 // feign death
 };
@@ -905,6 +905,13 @@ enum PlayerLoginQueryIndex
     MAX_PLAYER_LOGIN_QUERY
 };
 
+enum CommandNames
+{
+	TOGGLE_APPEAR = 8,
+	TOGGLE_SUMMON = 9,
+	TOGGLE_MODIFY = 10
+};
+
 enum PlayerDelayedOperations
 {
     DELAYED_SAVE_PLAYER         = 0x01,
@@ -982,7 +989,9 @@ enum PlayerCommandStates
     CHEAT_CASTTIME  = 0x02,
     CHEAT_COOLDOWN  = 0x04,
     CHEAT_POWER     = 0x08,
-    CHEAT_WATERWALK = 0x10
+    CHEAT_WATERWALK = 0x10,
+	CHEAT_SUMMON	= 0x20,
+	CHEAT_APPEAR	= 0x40
 };
 
 class PlayerTaxi
@@ -1329,6 +1338,11 @@ class Player : public Unit, public GridObject<Player>
         bool GetCommandStatus(uint32 command) const { return (_activeCheats & command) != 0; }
         void SetCommandStatusOn(uint32 command) { _activeCheats |= command; }
         void SetCommandStatusOff(uint32 command) { _activeCheats &= ~command; }
+
+		//Toggle Command Values
+		bool m_toggleAppear;
+		bool m_toggleSummon;
+		bool m_toggleModify;
 
         // Played Time Stuff
         time_t m_logintime;

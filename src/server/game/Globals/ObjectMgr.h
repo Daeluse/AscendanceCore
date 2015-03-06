@@ -138,6 +138,7 @@ struct GameTele
     uint32 mapId;
     std::string name;
     std::wstring wnameLow;
+	uint32 phase;
 };
 
 typedef std::unordered_map<uint32, GameTele > GameTeleContainer;

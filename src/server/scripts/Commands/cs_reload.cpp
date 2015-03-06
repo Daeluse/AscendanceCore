@@ -62,6 +62,7 @@ public:
             { "scripts",                       rbac::RBAC_PERM_COMMAND_RELOAD_ALL_SCRIPTS,                      true,  &HandleReloadAllScriptsCommand,                  "", NULL },
             { "spell",                         rbac::RBAC_PERM_COMMAND_RELOAD_ALL_SPELL,                        true,  &HandleReloadAllSpellCommand,                    "", NULL },
             { "",                              rbac::RBAC_PERM_COMMAND_RELOAD_ALL,                              true,  &HandleReloadAllCommand,                         "", NULL },
+			{ "starter",					   rbac::RBAC_PERM_COMMAND_RELOAD_ALL,								true,  &HandleReloadAllStarterCommand,				    "", NULL },
             { NULL,                            0,                                                               false, NULL,                                            "", NULL }
         };
         static ChatCommand reloadCommandTable[] =
@@ -155,6 +156,8 @@ public:
             { "waypoint_data",                 rbac::RBAC_PERM_COMMAND_RELOAD_WAYPOINT_DATA,                    true,  &HandleReloadWpCommand,                         "", NULL },
             { "vehicle_accessory",             rbac::RBAC_PERM_COMMAND_RELOAD_VEHICLE_ACCESORY,                 true,  &HandleReloadVehicleAccessoryCommand,           "", NULL },
             { "vehicle_template_accessory",    rbac::RBAC_PERM_COMMAND_RELOAD_VEHICLE_TEMPLATE_ACCESSORY,       true,  &HandleReloadVehicleTemplateAccessoryCommand,   "", NULL },
+			{ "full_creaturetemplate",		   rbac::RBAC_PERM_COMMAND_RELOAD_CREATURE_TEMPLATE,				true,  &HandleReloadFullCreatureTemplateCommand,	   "", NULL },
+			{ "item_template",				   rbac::RBAC_PERM_COMMAND_RELOAD_CREATURE_TEMPLATE,				true,  &HandleReloadItemTemplateCommand,  			   "", NULL },
             { NULL,                            0,                                                               false, NULL,                                           "", NULL }
         };
         static ChatCommand commandTable[] =
@@ -1144,6 +1147,30 @@ public:
         handler->SendGlobalGMSysMessage("RBAC data reloaded.");
         return true;
     }
+
+	static bool HandleReloadAllStarterCommand(ChatHandler* handler, const char* /*args*/)
+	{
+		HandleReloadItemTemplateCommand(handler, "a");
+		HandleReloadFullCreatureTemplateCommand(handler, "a");
+		return true;
+	}
+
+	static bool HandleReloadItemTemplateCommand(ChatHandler* handler, const char* /*args*/)
+	{
+		TC_LOG_INFO("misc", "Reloading RBAC tables...");
+		sObjectMgr->LoadItemTemplates();
+		handler->SendGlobalGMSysMessage("Item_template has been reloaded!");
+		return true;
+	}
+
+	static bool HandleReloadFullCreatureTemplateCommand(ChatHandler* handler, const char* /*args*/)
+	{
+		TC_LOG_INFO("misc", "Reloading RBAC tables...");
+		sObjectMgr->LoadCreatureTemplates();
+		handler->SendGlobalGMSysMessage("Creature_template has been reloaded!");
+		return true;
+	}
+
 };
 
 void AddSC_reload_commandscript()
