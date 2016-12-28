@@ -578,6 +578,16 @@ public:
 
 		player->SaveRecallPosition();
 
+// 		let values = this.form.value;
+
+// 		let tmpX = values['x'];
+// 		let tmpY = values['y'];
+// 		let tmpOrt = values['ort'] * ( Math.PI / 180 );
+// 		let tmpD = values['distance'];
+
+// 		this.newX = tmpX + ( tmpD / ( Math.sqrt( 1 + Math.pow( Math.tan( tmpOrt ), 2) ) ) );
+// 		this.newY = tmpY + ( tmpD / ( Math.sqrt( Math.pow( Math.tan( tmpOrt ), -2 ) + 1 ) ) );
+    
 		//player->Relocate(x, y, z, player->GetOrientation());
 		player->TeleportTo(mapId, x, y, z, ort);
 
